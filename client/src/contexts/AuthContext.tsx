@@ -11,6 +11,7 @@ interface AuthContextType {
   authConfig: AuthConfig | null;
   login: (token: string, user: User) => void;
   logout: () => void;
+  refreshAuthConfig: () => Promise<void>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -77,6 +78,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     addToast('Successfully logged out.', 'info');
   };
 
+  const refreshAuthConfig = async () => {
+    try {
+      const config = await getAuthConfig();
+      setAuthConfig(config);
+    } catch (error) {
+      console.error('Error refreshing auth config:', error);
+    }
+  };
+
   return (
     <AuthContext.Provider 
       value={{ 
@@ -85,7 +95,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         user,
         authConfig,
         login, 
-        logout 
+        logout,
+        refreshAuthConfig
       }}
     >
       {children}

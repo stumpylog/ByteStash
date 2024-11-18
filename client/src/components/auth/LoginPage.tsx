@@ -16,6 +16,10 @@ export const LoginPage: React.FC = () => {
     return <Navigate to="/" replace />;
   }
 
+  if (authConfig && !authConfig.hasUsers) {
+    return <Navigate to="/register" replace />;
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);

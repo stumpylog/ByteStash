@@ -2,24 +2,44 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET, TOKEN_EXPIRY, ALLOW_NEW_ACCOUNTS } = require('../middleware/auth');
 const userService = require('../services/userService');
+const { getDb } = require('../config/database');
+const { up_v1_5_0_snippets } = require('../config/migrations/20241117-migration');
 
 const router = express.Router();
 
-router.get('/config', (req, res) => {
-  res.json({ 
-    authRequired: true,
-    allowNewAccounts: ALLOW_NEW_ACCOUNTS
-  });
+router.get('/config', async (req, res) => {
+  try {
+    const db = getDb();
+    const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
+    const hasUsers = userCount > 0;
+    
+    res.json({ 
+      authRequired: true,
+      allowNewAccounts: !hasUsers || ALLOW_NEW_ACCOUNTS,
+      hasUsers
+    });
+  } catch (error) {
+    console.error('Error getting auth config:', error);
+    res.status(500).json({ error: 'Failed to get auth configuration' });
+  }
 });
 
 router.post('/register', async (req, res) => {
-  if (!ALLOW_NEW_ACCOUNTS) {
-    return res.status(403).json({ error: 'New account registration is disabled' });
-  }
-
   try {
+    const db = getDb();
+    const userCount = db.prepare('SELECT COUNT(*) as count FROM users').get().count;
+    const hasUsers = userCount > 0;
+    
+    if (hasUsers && !ALLOW_NEW_ACCOUNTS) {
+      return res.status(403).json({ error: 'New account registration is disabled' });
+    }
+
     const { username, password } = req.body;
     const user = await userService.createUser(username, password);
+    
+    if (!hasUsers) {
+      await up_v1_5_0_snippets(db, user.id);
+    }
     
     const token = jwt.sign({ 
       id: user.id,

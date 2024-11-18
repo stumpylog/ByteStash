@@ -4,20 +4,21 @@ import { useAuth } from '../../hooks/useAuth';
 import { register } from '../../utils/api/auth';
 import { PageContainer } from '../common/layout/PageContainer';
 import { useToast } from '../../hooks/useToast';
+import { AlertCircle } from 'lucide-react';
 
 export const RegisterPage: React.FC = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const { login, authConfig, isAuthenticated } = useAuth();
+  const { login, authConfig, isAuthenticated, refreshAuthConfig } = useAuth();
   const { addToast } = useToast();
 
   if (isAuthenticated) {
     return <Navigate to="/" replace />;
   }
 
-  if (!authConfig?.allowNewAccounts) {
+  if (!authConfig?.allowNewAccounts && authConfig?.hasUsers) {
     return (
       <PageContainer className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -47,6 +48,7 @@ export const RegisterPage: React.FC = () => {
     try {
       const response = await register(username, password);
       if (response.token && response.user) {
+        await refreshAuthConfig();
         login(response.token, response.user);
       }
     } catch (err: any) {
@@ -59,16 +61,34 @@ export const RegisterPage: React.FC = () => {
 
   return (
     <PageContainer className="flex items-center justify-center min-h-screen">
-      <div className="max-w-md w-full space-y-8">
+      <div className="max-w-md w-full space-y-6">
         <div>
           <h2 className="mt-6 text-center text-3xl font-bold text-white">
             Create Account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-400">
-            Or{' '}
-            <Link to="/login" className="text-blue-400 hover:text-blue-300">
-              sign in to your account
-            </Link>
+            {authConfig?.hasUsers ? (
+              <>
+                Or{' '}
+                <Link to="/login" className="text-blue-400 hover:text-blue-300">
+                  sign in to your account
+                </Link>
+              </>
+            ) : (
+              <div className="mt-4 relative overflow-hidden">
+                <div className="rounded-xl bg-gradient-to-r from-blue-600/10 to-blue-400/10 p-4 border border-blue-400/20">
+                  <div className="flex gap-3 items-start">
+                    <div className="w-5 h-5 rounded-full bg-blue-400/20 flex items-center justify-center flex-shrink-0 mt-0.25">
+                      <AlertCircle size={14} className="text-blue-400" />
+                    </div>
+                    <p className="text-sm text-blue-200 text-left">
+                      This is the first account to be created. All existing snippets will be
+                      automatically migrated to this account.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </p>
         </div>
 

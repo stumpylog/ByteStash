@@ -1,5 +1,3 @@
-const bcrypt = require('bcrypt');
-
 function needsMigration(db) {
   try {
     const hasUsersTable = db.prepare(`
@@ -32,17 +30,6 @@ function needsMigration(db) {
 
     if (hasUserIdIndex.count === 0) {
       console.log('Missing user_id index, migration needed');
-      return true;
-    }
-
-    const orphanedSnippets = db.prepare(`
-      SELECT COUNT(*) as count 
-      FROM snippets 
-      WHERE user_id IS NULL
-    `).get();
-
-    if (orphanedSnippets.count > 0) {
-      console.log(`Found ${orphanedSnippets.count} snippets without user_id, migration needed`);
       return true;
     }
 
@@ -79,32 +66,6 @@ async function up_v1_5_0(db) {
       CREATE INDEX idx_snippets_user_id ON snippets(user_id);
     `);
 
-    const adminUsername = process.env.DEFAULT_ADMIN_USERNAME;
-    const adminPassword = process.env.DEFAULT_ADMIN_PASSWORD;
-
-    if (adminUsername && adminPassword) {
-      console.log('Creating default admin user...');
-      const saltRounds = 10;
-      const passwordHash = await bcrypt.hash(adminPassword, saltRounds);
-
-      const insertUser = db.prepare(`
-        INSERT INTO users (username, password_hash)
-        VALUES (?, ?)
-      `);
-
-      const result = insertUser.run(adminUsername, passwordHash);
-      const userId = result.lastInsertRowid;
-
-      const updateSnippets = db.prepare(`
-        UPDATE snippets SET user_id = ? WHERE user_id IS NULL
-      `);
-
-      updateSnippets.run(userId);
-      console.log('Migrated existing snippets to admin user');
-    } else {
-      console.log('No default admin credentials provided, skipping user creation');
-    }
-
     console.log('Migration completed successfully');
   } catch (error) {
     console.error('Migration failed:', error);
@@ -112,6 +73,25 @@ async function up_v1_5_0(db) {
   }
 }
 
+async function up_v1_5_0_snippets(db, userId) {
+  try {
+    console.log(`Migrating orphaned snippets to user ${userId}...`);
+    
+    const updateSnippets = db.prepare(`
+      UPDATE snippets SET user_id = ? WHERE user_id IS NULL
+    `);
+
+    const result = updateSnippets.run(userId);
+    console.log(`Successfully migrated ${result.changes} snippets to user ${userId}`);
+    
+    return result.changes;
+  } catch (error) {
+    console.error('Snippet migration failed:', error);
+    throw error;
+  }
+}
+
 module.exports = {
-  up_v1_5_0
+  up_v1_5_0,
+  up_v1_5_0_snippets
 };

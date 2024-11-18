@@ -7,6 +7,7 @@ import { useToast } from '../../../hooks/useToast';
 import { createShare, deleteShare, getSharesBySnippetId } from '../../../utils/api/share';
 import { basePath } from '../../../utils/api/basePath';
 import Modal from '../../common/modals/Modal';
+import { Switch } from '../../common/switch/Switch';
 
 interface ShareMenuProps {
   snippetId: string;
@@ -133,12 +134,10 @@ export const ShareMenu: React.FC<ShareMenuProps> = ({ snippetId, isOpen, onClose
           
           <div className="space-y-4">
             <label className="flex items-center gap-2">
-              <input
-                type="checkbox"
+              <Switch 
+                id="useAuth"
                 checked={requiresAuth}
-                onChange={e => setRequiresAuth(e.target.checked)}
-                className="form-checkbox h-4 w-4"
-              />
+                onChange={setRequiresAuth}/>
               <span>Require authentication</span>
             </label>
 

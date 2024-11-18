@@ -4,6 +4,7 @@ import Modal from '../common/modals/Modal';
 import ChangelogModal from '../common/modals/ChangelogModal';
 import { useToast } from '../../hooks/useToast';
 import { Snippet } from '../../types/snippets';
+import { Switch } from '../common/switch/Switch';
 
 const GITHUB_URL = "https://github.com/jordan-dalby/ByteStash";
 const DOCKER_URL = "https://github.com/jordan-dalby/ByteStash/pkgs/container/bytestash";
@@ -184,7 +185,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   };
 
   const SettingsGroup: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-    <div className="space-y-3 p-4 pt-0 pl-0 bg-gray-800 rounded-lg">
+    <div className="space-y-3 p-4 pt-0 gpl-0 bg-gray-800 rounded-lg">
       <h3 className="text-sm font-medium text-gray-200 mb-3">{title}</h3>
       {children}
     </div>
@@ -212,32 +213,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
         {children}
       </div>
     </div>
-  );
-
-  const Switch: React.FC<{
-    id: string;
-    checked: boolean;
-    onChange: (checked: boolean) => void;
-  }> = ({ id, checked, onChange }) => (
-    <button
-      id={id}
-      role="switch"
-      aria-checked={checked}
-      onClick={() => onChange(!checked)}
-      className={`
-        relative inline-flex h-5 w-9 items-center rounded-full
-        transition-colors duration-200 ease-in-out focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500
-        ${checked ? 'bg-blue-600' : 'bg-gray-600'}
-      `}
-    >
-      <span
-        className={`
-          inline-block h-4 w-4 transform rounded-full bg-white
-          transition duration-200 ease-in-out
-          ${checked ? 'translate-x-5' : 'translate-x-1'}
-        `}
-      />
-    </button>
   );
 
   return (
