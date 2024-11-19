@@ -107,7 +107,7 @@ export const SnippetCard: React.FC<SnippetCardProps> = ({
         )}
 
         {/* Main Content */}
-        <div className="p-4">
+        <div className="p-4 pt-2">
           {/* Header Section */}
           <div className="flex justify-between items-start gap-4 mb-3">
             <div className="min-w-0 flex-1">
@@ -160,7 +160,7 @@ export const SnippetCard: React.FC<SnippetCardProps> = ({
           )}
 
           {/* Categories */}
-          {showCategories && snippet.categories.length > 0 && (
+          {showCategories && (
             <div className="mb-3">
               <CategoryList
                 categories={snippet.categories}
@@ -174,31 +174,34 @@ export const SnippetCard: React.FC<SnippetCardProps> = ({
           {/* Code Preview */}
           {showCodePreview && currentFragment && (
             <div>
-              <div className="flex items-center justify-between text-xs text-gray-400 mb-1 
-              bg-gray-900/50 rounded px-2 py-1">
-                <div className="flex items-center gap-1 min-w-0">
+              <div className="flex items-center justify-between text-xs text-gray-400 mb-1 bg-gray-900/50 rounded px-2 h-7">
+                <div className="flex items-center gap-1 min-w-0 flex-1">
                   <FileCode size={12} className="text-gray-500 shrink-0" />
                   <span className="truncate">{currentFragment.file_name}</span>
                 </div>
-                {snippet.fragments.length > 1 && (
-                  <div className="flex items-center gap-0.5 ml-2">
-                    <button
-                      onClick={handlePrevFragment}
-                      className="p-0.5 hover:bg-gray-700 rounded transition-colors"
-                    >
-                      <ChevronLeft size={14} />
-                    </button>
-                    <span className="mx-1 text-gray-500">
-                      {currentFragmentIndex + 1}/{snippet.fragments.length}
-                    </span>
-                    <button
-                      onClick={handleNextFragment}
-                      className="p-0.5 hover:bg-gray-700 rounded transition-colors"
-                    >
-                      <ChevronRight size={14} />
-                    </button>
-                  </div>
-                )}
+                <div className="flex items-center gap-0.5 ml-2">
+                  {snippet.fragments.length > 1 ? (
+                    <>
+                      <button
+                        onClick={handlePrevFragment}
+                        className="p-0.5 hover:bg-gray-700 rounded transition-colors"
+                      >
+                        <ChevronLeft size={14} />
+                      </button>
+                      <span className="mx-1 text-gray-500">
+                        {currentFragmentIndex + 1}/{snippet.fragments.length}
+                      </span>
+                      <button
+                        onClick={handleNextFragment}
+                        className="p-0.5 hover:bg-gray-700 rounded transition-colors"
+                      >
+                        <ChevronRight size={14} />
+                      </button>
+                    </>
+                  ) : (
+                    <div className="w-[14px]" />
+                  )}
+                </div>
               </div>
 
               {/* Code Block */}

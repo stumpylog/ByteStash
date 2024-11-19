@@ -38,6 +38,7 @@ const SnippetModal: React.FC<SnippetModalProps> = ({
         snippet={snippet}
         showLineNumbers={showLineNumbers}
         onCategoryClick={() => handleCategoryClick}
+        isModal={true}
       />
     </Modal>
   );
