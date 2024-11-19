@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, User } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { useSettings } from '../../../../hooks/useSettings';
 import { Snippet } from '../../../../types/snippets';
 import { getLanguageLabel, initializeMonaco } from '../../../../utils/language/languageUtils';
@@ -8,7 +9,6 @@ import SnippetList from '../../list/SnippetList';
 import SettingsModal from '../../../settings/SettingsModal';
 import SnippetModal from '../SnippetModal';
 import { PageContainer } from '../../../common/layout/PageContainer';
-import { Link } from 'react-router-dom';
 import { fetchPublicSnippets } from '../../../../utils/api/snippets';
 
 const PublicSnippetStorage: React.FC = () => {
@@ -131,12 +131,14 @@ const PublicSnippetStorage: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 p-8">
       <div className="flex justify-between items-start mb-4">
-        <div className="flex items-end gap-2">
-          <h1 className="text-4xl font-bold text-gray-100">ByteStash</h1>
-          <Link to="/login" className="text-blue-400 hover:text-blue-300 ml-4">
-            Sign in
-          </Link>
-        </div>
+        <h1 className="text-4xl font-bold text-gray-100">ByteStash</h1>
+        <Link
+          to="/login"
+          className="flex items-center gap-2 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 rounded-md transition-colors text-sm"
+        >
+          <User size={16} />
+          <span>Sign in</span>
+        </Link>
       </div>
       
       <SearchAndFilter

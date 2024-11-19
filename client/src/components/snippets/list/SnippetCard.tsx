@@ -90,13 +90,18 @@ export const SnippetCard: React.FC<SnippetCardProps> = ({
           cursor-pointer hover:bg-gray-700 transition-colors relative group`}
         onClick={() => onOpen(snippet)}
       >
-        {/* Status Bar - Public indicator and last updated */}
         {(snippet.is_public === 1 || snippet.updated_at) && (
           <div className="bg-gray-900/50 px-3 py-1 text-xs flex items-center justify-between">
-            {snippet.is_public === 1 && !isPublicView && (
-              <div className="flex items-center gap-1 text-blue-400">
+            {snippet.is_public === 1 && (
+              <div className="flex items-center gap-1 text-blue-400 mr-4">
                 <Globe size={12} />
                 <span>Public</span>
+              </div>
+            )}
+            {!isPublicView && (snippet.share_count || 0 ) > 0 && (
+              <div className="flex items-center gap-1 text-blue-400 mr-4">
+                <Users size={12} />
+                <span>Shared</span>
               </div>
             )}
             <div className="flex items-center gap-1 text-gray-500 ml-auto">
@@ -106,9 +111,7 @@ export const SnippetCard: React.FC<SnippetCardProps> = ({
           </div>
         )}
 
-        {/* Main Content */}
         <div className="p-4 pt-2">
-          {/* Header Section */}
           <div className="flex justify-between items-start gap-4 mb-3">
             <div className="min-w-0 flex-1">
               <h3 className={`${compactView ? 'text-lg' : 'text-xl'} font-bold text-gray-200 
@@ -116,7 +119,6 @@ export const SnippetCard: React.FC<SnippetCardProps> = ({
                 {snippet.title}
               </h3>
 
-              {/* Language and Sharing Info */}
               <div className="flex flex-wrap items-center gap-3 text-sm">
                 <div className="flex items-center gap-1 text-gray-400">
                   <FileCode size={14} className="text-gray-500" />
@@ -127,13 +129,6 @@ export const SnippetCard: React.FC<SnippetCardProps> = ({
                   <div className="flex items-center gap-1 text-gray-400">
                     <Users size={14} />
                     <span>{snippet.username}</span>
-                  </div>
-                )}
-
-                {(snippet.share_count || 0) > 0 && !isPublicView && (
-                  <div className="flex items-center gap-1 text-blue-400">
-                    <Users size={14} />
-                    <span>{snippet.share_count}</span>
                   </div>
                 )}
               </div>
@@ -150,7 +145,6 @@ export const SnippetCard: React.FC<SnippetCardProps> = ({
             </div>
           </div>
 
-          {/* Description */}
           {!compactView && (
             <p className="text-sm text-gray-300 mb-3 line-clamp-2">
               <Linkify options={linkifyOptions}>
@@ -159,7 +153,6 @@ export const SnippetCard: React.FC<SnippetCardProps> = ({
             </p>
           )}
 
-          {/* Categories */}
           {showCategories && (
             <div className="mb-3">
               <CategoryList
@@ -171,7 +164,6 @@ export const SnippetCard: React.FC<SnippetCardProps> = ({
             </div>
           )}
 
-          {/* Code Preview */}
           {showCodePreview && currentFragment && (
             <div>
               <div className="flex items-center justify-between text-xs text-gray-400 mb-1 bg-gray-900/50 rounded px-2 h-7">
@@ -204,7 +196,6 @@ export const SnippetCard: React.FC<SnippetCardProps> = ({
                 </div>
               </div>
 
-              {/* Code Block */}
               <PreviewCodeBlock
                 code={currentFragment.code}
                 language={currentFragment.language}

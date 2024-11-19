@@ -30,7 +30,8 @@ class SnippetRepository {
           s.user_id,
           s.is_public,
           u.username,
-          GROUP_CONCAT(DISTINCT c.name) as categories
+          GROUP_CONCAT(DISTINCT c.name) as categories,
+          (SELECT COUNT(*) FROM shared_snippets WHERE snippet_id = s.id) as share_count
         FROM snippets s
         LEFT JOIN categories c ON s.id = c.snippet_id
         LEFT JOIN users u ON s.user_id = u.id
@@ -48,20 +49,14 @@ class SnippetRepository {
           s.user_id,
           s.is_public,
           u.username,
-          GROUP_CONCAT(DISTINCT c.name) as categories
+          GROUP_CONCAT(DISTINCT c.name) as categories,
+          (SELECT COUNT(*) FROM shared_snippets WHERE snippet_id = s.id) as share_count
         FROM snippets s
         LEFT JOIN categories c ON s.id = c.snippet_id
         LEFT JOIN users u ON s.user_id = u.id
         WHERE s.is_public = TRUE
         GROUP BY s.id
         ORDER BY s.updated_at DESC
-      `);
-
-      this.selectFragmentsStmt = db.prepare(`
-        SELECT id, file_name, code, language, position
-        FROM fragments
-        WHERE snippet_id = ?
-        ORDER BY position
       `);
 
       this.insertSnippetStmt = db.prepare(`
@@ -126,7 +121,8 @@ class SnippetRepository {
           s.user_id,
           s.is_public,
           u.username,
-          GROUP_CONCAT(DISTINCT c.name) as categories
+          GROUP_CONCAT(DISTINCT c.name) as categories,
+          (SELECT COUNT(*) FROM shared_snippets WHERE snippet_id = s.id) as share_count
         FROM snippets s
         LEFT JOIN categories c ON s.id = c.snippet_id
         LEFT JOIN users u ON s.user_id = u.id
@@ -143,7 +139,8 @@ class SnippetRepository {
           s.user_id,
           s.is_public,
           u.username,
-          GROUP_CONCAT(DISTINCT c.name) as categories
+          GROUP_CONCAT(DISTINCT c.name) as categories,
+          (SELECT COUNT(*) FROM shared_snippets WHERE snippet_id = s.id) as share_count
         FROM snippets s
         LEFT JOIN categories c ON s.id = c.snippet_id
         LEFT JOIN users u ON s.user_id = u.id
@@ -154,6 +151,13 @@ class SnippetRepository {
       this.deleteSnippetStmt = db.prepare(`
         DELETE FROM snippets 
         WHERE id = ? AND user_id = ?
+      `);
+
+      this.selectFragmentsStmt = db.prepare(`
+        SELECT id, file_name, code, language, position
+        FROM fragments
+        WHERE snippet_id = ?
+        ORDER BY position
       `);
     }
   }
@@ -166,7 +170,8 @@ class SnippetRepository {
     return {
       ...snippet,
       categories: snippet.categories ? snippet.categories.split(',') : [],
-      fragments: fragments.sort((a, b) => a.position - b.position)
+      fragments: fragments.sort((a, b) => a.position - b.position),
+      share_count: snippet.share_count || 0
     };
   }
 
