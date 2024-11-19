@@ -1,0 +1,15 @@
+services:
+  server:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "5001:5000"
+    environment:
+      - BASE_PATH=
+      - JWT_SECRET=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.nhan23TF0qyO4l4rDMkJ8ebNLMgV62NGfBozt9huymA
+      - TOKEN_EXPIRY=24h
+      - ALLOW_NEW_ACCOUNTS=true
+      - DEBUG=true
+    volumes:
+      - ./data:/data/snippets

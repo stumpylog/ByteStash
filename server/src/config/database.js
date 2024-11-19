@@ -3,41 +3,32 @@ const path = require('path');
 const fs = require('fs');
 const { up_v1_4_0 } = require('./migrations/20241111-migration');
 const { up_v1_5_0 } = require('./migrations/20241117-migration');
+const Logger = require('../logger');
 
 let db = null;
 let checkpointInterval = null;
 
 function getDatabasePath() {
-  if (process.env.NODE_ENV === 'production') {
-    const userDataPath = './data/snippets';
-    
-    if (!fs.existsSync(userDataPath)) {
-      fs.mkdirSync(userDataPath, { recursive: true });
-    }
-    
-    return path.join(userDataPath, 'snippets.db');
-  } else {
-    const devPath = path.join(__dirname, '../../../data/snippets');
-    if (!fs.existsSync(devPath)) {
-      fs.mkdirSync(devPath, { recursive: true });
-    }
-    return path.join(devPath, 'snippets.db');
+  const dbPath = path.join(__dirname, '../../../data/snippets');
+  if (!fs.existsSync(dbPath)) {
+    fs.mkdirSync(dbPath, { recursive: true });
   }
+  return path.join(dbPath, 'snippets.db');
 }
 
 function checkpointDatabase() {
   if (!db) return;
   
   try {
-    console.log('Starting database checkpoint...');
+    Logger.debug('Starting database checkpoint...');
     const start = Date.now();
     
     db.pragma('wal_checkpoint(PASSIVE)');
     
     const duration = Date.now() - start;
-    console.log(`Database checkpoint completed in ${duration}ms`);
+    Logger.debug(`Database checkpoint completed in ${duration}ms`);
   } catch (error) {
-    console.error('Error during database checkpoint:', error);
+    Logger.error('Error during database checkpoint:', error);
   }
 }
 
@@ -66,14 +57,14 @@ function backupDatabase(dbPath) {
     if (fs.existsSync(dbPath)) {
       const dbBackupPath = `${baseBackupPath}.db`;
       fs.copyFileSync(dbPath, dbBackupPath);
-      console.log(`Database backed up to: ${dbBackupPath}`);
+      Logger.debug(`Database backed up to: ${dbBackupPath}`);
     } else {
-      console.error(`Database file not found: ${dbPath}`);
+      Logger.error(`Database file not found: ${dbPath}`);
       return false;
     }
     return true;
   } catch (error) {
-    console.error('Failed to create database backup:', error);
+    Logger.error('Failed to create database backup:', error);
     throw error;
   }
 }
@@ -132,12 +123,12 @@ function createInitialSchema(db) {
 function initializeDatabase() {
   try {
     const dbPath = getDatabasePath();
-    console.log(`Initializing SQLite database at: ${dbPath}`);
+    Logger.debug(`Initializing SQLite database at: ${dbPath}`);
 
     const dbExists = fs.existsSync(dbPath);
 
     db = new Database(dbPath, { 
-      verbose: console.log,
+      verbose: Logger.debug,
       fileMustExist: false
     });
 
@@ -147,10 +138,10 @@ function initializeDatabase() {
     backupDatabase(dbPath);
 
     if (!dbExists) {
-      console.log('Creating new database with initial schema...');
+      Logger.debug('Creating new database with initial schema...');
       createInitialSchema(db);
     } else {
-      console.log('Database file exists, checking for needed migrations...');
+      Logger.debug('Database file exists, checking for needed migrations...');
       
       up_v1_4_0(db);
       up_v1_5_0(db);
@@ -158,10 +149,10 @@ function initializeDatabase() {
 
     startCheckpointInterval();
 
-    console.log('Database initialization completed successfully');
+    Logger.debug('Database initialization completed successfully');
     return db;
   } catch (error) {
-    console.error('Database initialization error:', error);
+    Logger.error('Database initialization error:', error);
     throw error;
   }
 }
@@ -176,16 +167,16 @@ function getDb() {
 function shutdownDatabase() {
   if (db) {
     try {
-      console.log('Performing final database checkpoint...');
+      Logger.debug('Performing final database checkpoint...');
       db.pragma('wal_checkpoint(TRUNCATE)');
       
       stopCheckpointInterval();
       db.close();
       db = null;
       
-      console.log('Database shutdown completed successfully');
+      Logger.debug('Database shutdown completed successfully');
     } catch (error) {
-      console.error('Error during database shutdown:', error);
+      Logger.error('Error during database shutdown:', error);
       throw error;
     }
   }

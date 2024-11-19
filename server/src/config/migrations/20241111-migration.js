@@ -1,3 +1,5 @@
+const Logger = require("../../logger");
+
 function needsMigration(db) {
   const hasCodeColumn = db.prepare(`
     SELECT COUNT(*) as count 
@@ -10,11 +12,11 @@ function needsMigration(db) {
 
 async function up_v1_4_0(db) {
   if (!needsMigration(db)) {
-    console.log('v1.4.0 - Migration not necessary');
+    Logger.debug('v1.4.0 - Migration not necessary');
     return;
   }
   
-  console.log('v1.4.0 - Starting migration to fragments...');
+  Logger.debug('v1.4.0 - Starting migration to fragments...');
   
   db.pragma('foreign_keys = OFF');
   
@@ -70,9 +72,9 @@ async function up_v1_4_0(db) {
       `);
     })();
 
-    console.log('Migration completed successfully');
+    Logger.debug('Migration completed successfully');
   } catch (error) {
-    console.error('Migration failed:', error);
+    Logger.error('Migration failed:', error);
     throw error;
   } finally {
     db.pragma('foreign_keys = ON');
