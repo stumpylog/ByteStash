@@ -1,3 +1,4 @@
+const Logger = require('../logger');
 const userRepository = require('../repositories/userRepository');
 
 class UserService {
@@ -17,7 +18,7 @@ class UserService {
 
       return await userRepository.create(username, password);
     } catch (error) {
-      console.error('Service Error - createUser:', error);
+      Logger.error('Service Error - createUser:', error);
       throw error;
     }
   }
@@ -37,7 +38,7 @@ class UserService {
       const { password_hash, ...userWithoutPassword } = user;
       return userWithoutPassword;
     } catch (error) {
-      console.error('Service Error - validateUser:', error);
+      Logger.error('Service Error - validateUser:', error);
       throw error;
     }
   }
@@ -46,7 +47,7 @@ class UserService {
     try {
       return await userRepository.findById(id);
     } catch (error) {
-      console.error('Service Error - findById:', error);
+      Logger.error('Service Error - findById:', error);
       throw error;
     }
   }

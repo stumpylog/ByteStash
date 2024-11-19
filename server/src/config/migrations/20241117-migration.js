@@ -1,3 +1,5 @@
+const Logger = require("../../logger");
+
 function needsMigration(db) {
   try {
     const hasUsersTable = db.prepare(`
@@ -7,7 +9,7 @@ function needsMigration(db) {
     `).get();
 
     if (!hasUsersTable) {
-      console.log('Users table does not exist, migration needed');
+      Logger.debug('Users table does not exist, migration needed');
       return true;
     }
 
@@ -18,7 +20,7 @@ function needsMigration(db) {
     `).get();
 
     if (hasUserIdColumn.count === 0) {
-      console.log('Snippets table missing user_id column, migration needed');
+      Logger.debug('Snippets table missing user_id column, migration needed');
       return true;
     }
 
@@ -29,25 +31,25 @@ function needsMigration(db) {
     `).get();
 
     if (hasUserIdIndex.count === 0) {
-      console.log('Missing user_id index, migration needed');
+      Logger.debug('Missing user_id index, migration needed');
       return true;
     }
 
-    console.log('Database schema is up to date, no migration needed');
+    Logger.debug('Database schema is up to date, no migration needed');
     return false;
   } catch (error) {
-    console.error('Error checking migration status:', error);
+    Logger.error('Error checking migration status:', error);
     throw error;
   }
 }
 
 async function up_v1_5_0(db) {
   if (!needsMigration(db)) {
-    console.log('v1.5.0 - Migration is not needed, database is up to date');
+    Logger.debug('v1.5.0 - Migration is not needed, database is up to date');
     return;
   }
   
-  console.log('v1.5.0 - Starting migration: Adding users table and updating snippets...');
+  Logger.debug('v1.5.0 - Starting migration: Adding users table and updating snippets...');
 
   try {
     db.exec(`
@@ -66,27 +68,27 @@ async function up_v1_5_0(db) {
       CREATE INDEX idx_snippets_user_id ON snippets(user_id);
     `);
 
-    console.log('Migration completed successfully');
+    Logger.debug('Migration completed successfully');
   } catch (error) {
-    console.error('Migration failed:', error);
+    Logger.error('Migration failed:', error);
     throw error;
   }
 }
 
 async function up_v1_5_0_snippets(db, userId) {
   try {
-    console.log(`Migrating orphaned snippets to user ${userId}...`);
+    Logger.debug(`Migrating orphaned snippets to user ${userId}...`);
     
     const updateSnippets = db.prepare(`
       UPDATE snippets SET user_id = ? WHERE user_id IS NULL
     `);
 
     const result = updateSnippets.run(userId);
-    console.log(`Successfully migrated ${result.changes} snippets to user ${userId}`);
+    Logger.debug(`Successfully migrated ${result.changes} snippets to user ${userId}`);
     
     return result.changes;
   } catch (error) {
-    console.error('Snippet migration failed:', error);
+    Logger.error('Snippet migration failed:', error);
     throw error;
   }
 }

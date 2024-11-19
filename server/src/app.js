@@ -6,6 +6,7 @@ const shareRoutes = require('./routes/shareRoutes')
 const { authenticateToken } = require('./middleware/auth');
 const { join } = require('path');
 const fs = require('fs');
+const Logger = require('./logger');
 
 const app = express();
 const PORT = 5000;
@@ -71,7 +72,7 @@ app.get(`${basePath}/*`, (req, res, next) => {
 });
 
 function handleShutdown() {
-  console.log('Received shutdown signal, starting graceful shutdown...');
+  Logger.info('Received shutdown signal, starting graceful shutdown...');
   
   shutdownDatabase();
   
@@ -86,7 +87,7 @@ process.on('SIGINT', handleShutdown);
 
   return new Promise((resolve) => {
     app.listen(PORT, () => {
-        console.log(`Server running on port ${PORT}`);
+        Logger.info(`Server running on port ${PORT}`);
         resolve();
     });
   });

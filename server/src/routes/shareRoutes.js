@@ -2,6 +2,7 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const { JWT_SECRET, authenticateToken } = require('../middleware/auth');
 const shareRepository = require('../repositories/shareRepository');
+const Logger = require('../logger');
 const router = express.Router();
 
 router.post('/', authenticateToken, async (req, res) => {
@@ -14,7 +15,7 @@ router.post('/', authenticateToken, async (req, res) => {
     }, req.user.id);
     res.status(201).json(share);
   } catch (error) {
-    console.error('Error creating share:', error);
+    Logger.error('Error creating share:', error);
     if (error.message === 'Unauthorized') {
       res.status(403).json({ error: 'You do not have permission to share this snippet' });
     } else if (error.message === 'Invalid snippet ID') {
@@ -55,7 +56,7 @@ router.get('/:id', async (req, res) => {
 
     res.json(share);
   } catch (error) {
-    console.error('Error getting share:', error);
+    Logger.error('Error getting share:', error);
     res.status(500).json({ error: 'Failed to get share' });
   }
 });
@@ -66,7 +67,7 @@ router.get('/snippet/:snippetId', authenticateToken, async (req, res) => {
     const shares = await shareRepository.getSharesBySnippetId(snippetId, req.user.id);
     res.json(shares);
   } catch (error) {
-    console.error('Error listing shares:', error);
+    Logger.error('Error listing shares:', error);
     res.status(500).json({ error: 'Failed to list shares' });
   }
 });
@@ -77,7 +78,7 @@ router.delete('/:id', authenticateToken, async (req, res) => {
     await shareRepository.deleteShare(id, req.user.id);
     res.json({ success: true });
   } catch (error) {
-    console.error('Error deleting share:', error);
+    Logger.error('Error deleting share:', error);
     res.status(500).json({ error: 'Failed to delete share' });
   }
 });

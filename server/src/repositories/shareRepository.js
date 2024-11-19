@@ -1,5 +1,6 @@
 const { getDb } = require('../config/database');
 const crypto = require('crypto');
+const Logger = require('../logger');
 
 class ShareRepository {
   constructor() {
@@ -126,7 +127,7 @@ class ShareRepository {
         expiresIn
       };
     } catch (error) {
-      console.error('Error in createShare:', error);
+      Logger.error('Error in createShare:', error);
       throw error;
     }
   }
@@ -137,7 +138,7 @@ class ShareRepository {
       const share = this.getShareStmt.get(id);
       return this.#processShare(share);
     } catch (error) {
-      console.error('Error in getShare:', error);
+      Logger.error('Error in getShare:', error);
       throw error;
     }
   }
@@ -151,7 +152,7 @@ class ShareRepository {
       }
       return this.getSharesBySnippetIdStmt.all(snippetIdInt, userId);
     } catch (error) {
-      console.error('Error in getSharesBySnippetId:', error);
+      Logger.error('Error in getSharesBySnippetId:', error);
       throw error;
     }
   }
@@ -161,7 +162,7 @@ class ShareRepository {
     try {
       return this.deleteShareStmt.run(id, userId);
     } catch (error) {
-      console.error('Error in deleteShare:', error);
+      Logger.error('Error in deleteShare:', error);
       throw error;
     }
   }

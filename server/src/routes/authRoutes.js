@@ -4,6 +4,7 @@ const { JWT_SECRET, TOKEN_EXPIRY, ALLOW_NEW_ACCOUNTS } = require('../middleware/
 const userService = require('../services/userService');
 const { getDb } = require('../config/database');
 const { up_v1_5_0_snippets } = require('../config/migrations/20241117-migration');
+const Logger = require('../logger');
 
 const router = express.Router();
 
@@ -19,7 +20,7 @@ router.get('/config', async (req, res) => {
       hasUsers
     });
   } catch (error) {
-    console.error('Error getting auth config:', error);
+    Logger.error('Error getting auth config:', error);
     res.status(500).json({ error: 'Failed to get auth configuration' });
   }
 });
@@ -57,7 +58,7 @@ router.post('/register', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Registration error:', error);
+    Logger.error('Registration error:', error);
     res.status(400).json({ error: error.message });
   }
 });
@@ -80,7 +81,7 @@ router.post('/login', async (req, res) => {
 
     res.json({ token, user });
   } catch (error) {
-    console.error('Login error:', error);
+    Logger.error('Login error:', error);
     res.status(500).json({ error: 'An error occurred during login' });
   }
 });

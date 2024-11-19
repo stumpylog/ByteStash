@@ -1,4 +1,5 @@
 const { getDb } = require('../config/database');
+const Logger = require('../logger');
 
 class SnippetRepository {
   constructor() {
@@ -130,7 +131,7 @@ class SnippetRepository {
       const snippets = this.selectAllStmt.all(userId);
       return snippets.map(this.#processSnippet.bind(this));
     } catch (error) {
-      console.error('Error in findAll:', error);
+      Logger.error('Error in findAll:', error);
       throw error;
     }
   }
@@ -166,7 +167,7 @@ class SnippetRepository {
         return this.#processSnippet(created);
       })();
     } catch (error) {
-      console.error('Error in create:', error);
+      Logger.error('Error in create:', error);
       throw error;
     }
   }
@@ -201,7 +202,7 @@ class SnippetRepository {
         return this.#processSnippet(updated);
       })();
     } catch (error) {
-      console.error('Error in update:', error);
+      Logger.error('Error in update:', error);
       throw error;
     }
   }
@@ -220,7 +221,7 @@ class SnippetRepository {
         return null;
       })();
     } catch (error) {
-      console.error('Error in delete:', error);
+      Logger.error('Error in delete:', error);
       throw error;
     }
   }
@@ -231,7 +232,7 @@ class SnippetRepository {
       const snippet = this.selectByIdStmt.get(id, userId);
       return this.#processSnippet(snippet);
     } catch (error) {
-      console.error('Error in findById:', error);
+      Logger.error('Error in findById:', error);
       throw error;
     }
   }
