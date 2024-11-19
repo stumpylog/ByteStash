@@ -1,8 +1,9 @@
 import React from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import { AuthProvider } from './contexts/AuthContext';
 import { useAuth } from './hooks/useAuth';
 import { LoginPage } from './components/auth/LoginPage';
+import { RegisterPage } from './components/auth/RegisterPage';
 import { ROUTES } from './constants/routes';
 import { PageContainer } from './components/common/layout/PageContainer';
 import { ToastProvider } from './contexts/ToastContext';
@@ -11,7 +12,7 @@ import SharedSnippetView from './components/snippets/share/SharedSnippetView';
 import SnippetPage from './components/snippets/view/SnippetPage';
 
 const AuthenticatedApp: React.FC = () => {
-  const { isAuthenticated, isAuthRequired, isLoading } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
 
   if (isLoading) {
     return (
@@ -23,8 +24,8 @@ const AuthenticatedApp: React.FC = () => {
     );
   }
 
-  if (isAuthRequired && !isAuthenticated) {
-    return <LoginPage />;
+  if (!isAuthenticated) {
+    return <Navigate to={ROUTES.LOGIN} replace />;
   }
 
   return <SnippetStorage />;
@@ -36,6 +37,8 @@ const App: React.FC = () => {
       <ToastProvider>
         <AuthProvider>
           <Routes>
+            <Route path={ROUTES.LOGIN} element={<LoginPage />} />
+            <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
             <Route path={ROUTES.SHARED_SNIPPET} element={<SharedSnippetView />} />
             <Route path={ROUTES.SNIPPET} element={<SnippetPage />} />
             <Route path={ROUTES.HOME} element={<AuthenticatedApp />} />

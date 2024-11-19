@@ -1,6 +1,5 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
-import { Loader2, LogOut } from 'lucide-react';
-import { useAuth } from '../../../hooks/useAuth';
+import { Loader2 } from 'lucide-react';
 import { useSnippets } from '../../../hooks/useSnippets';
 import { useSettings } from '../../../hooks/useSettings';
 import { Snippet } from '../../../types/snippets';
@@ -12,12 +11,12 @@ import SettingsModal from '../../settings/SettingsModal';
 import { ShareMenu } from '../share/ShareMenu';
 import SnippetModal from './SnippetModal';
 import { PageContainer } from '../../common/layout/PageContainer';
+import { UserDropdown } from '../../auth/UserDropdown';
 
 const APP_VERSION = "1.4.1";
 
 const SnippetStorage: React.FC = () => {
   const { snippets, isLoading, addSnippet, updateSnippet, removeSnippet, reloadSnippets } = useSnippets();
-  const { logout, isAuthRequired } = useAuth();
   const { 
     viewMode, setViewMode, compactView, showCodePreview, 
     previewLines, includeCodeInSearch, updateSettings,
@@ -51,10 +50,6 @@ const SnippetStorage: React.FC = () => {
       return [...prev, category];
     });
   }, []);
-
-  const handleLogout = () => {
-    logout();
-  };
 
   const openShareMenu = useCallback((snippet: Snippet) => {
     setSnippetToShare(snippet);
@@ -181,15 +176,7 @@ const SnippetStorage: React.FC = () => {
           <h1 className="text-4xl font-bold text-gray-100">ByteStash</h1>
           <span className="text-sm text-gray-400 mb-0">v{APP_VERSION}</span>
         </div>
-        {isAuthRequired && (
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-md transition-colors"
-          >
-            <LogOut size={18} />
-            <span>Logout</span>
-          </button>
-        )}
+        <UserDropdown />
       </div>
       
       <SearchAndFilter

@@ -70,6 +70,17 @@ app.get(`${basePath}/*`, (req, res, next) => {
   });
 });
 
+function handleShutdown() {
+  console.log('Received shutdown signal, starting graceful shutdown...');
+  
+  shutdownDatabase();
+  
+  process.exit(0);
+}
+
+process.on('SIGTERM', handleShutdown);
+process.on('SIGINT', handleShutdown);
+
 (async () => {
   await initializeDatabase();
 

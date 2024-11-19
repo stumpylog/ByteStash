@@ -38,7 +38,6 @@ export class ApiClient {
       if (error.status === 401 || error.status === 403) {
         window.dispatchEvent(new CustomEvent(EVENTS.AUTH_ERROR));
       }
-      throw new Error(`HTTP error! status: ${error.status}`);
     }
     throw error;
   }
@@ -55,7 +54,7 @@ export class ApiClient {
           window.dispatchEvent(new CustomEvent(EVENTS.AUTH_ERROR));
         }
         const error = await response.json().catch(() => ({}));
-        throw new Error(error.message || `HTTP error! status: ${response.status}`);
+        throw error;
       }
 
       return response.json();

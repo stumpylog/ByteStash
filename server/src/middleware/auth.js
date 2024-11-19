@@ -1,17 +1,10 @@
 const jwt = require('jsonwebtoken');
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
-const AUTH_USERNAME = process.env.AUTH_USERNAME;
-const AUTH_PASSWORD = process.env.AUTH_PASSWORD;
+const ALLOW_NEW_ACCOUNTS = process.env.ALLOW_NEW_ACCOUNTS === 'true';
 const TOKEN_EXPIRY = process.env.TOKEN_EXPIRY || '24h';
 
-const authRequired = !!(AUTH_USERNAME && AUTH_PASSWORD);
-
 const authenticateToken = (req, res, next) => {
-  if (!authRequired) {
-    return next();
-  }
-
   const authHeader = req.headers['authorization'];
   const token = authHeader && authHeader.split(' ')[1];
 
@@ -30,9 +23,7 @@ const authenticateToken = (req, res, next) => {
 
 module.exports = { 
   authenticateToken, 
-  authRequired, 
-  JWT_SECRET, 
-  AUTH_USERNAME, 
-  AUTH_PASSWORD,
-  TOKEN_EXPIRY 
+  JWT_SECRET,
+  TOKEN_EXPIRY,
+  ALLOW_NEW_ACCOUNTS
 };

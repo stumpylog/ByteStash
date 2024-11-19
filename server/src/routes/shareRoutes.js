@@ -11,11 +11,17 @@ router.post('/', authenticateToken, async (req, res) => {
       snippetId,
       requiresAuth: !!requiresAuth,
       expiresIn: expiresIn ? parseInt(expiresIn) : null
-    });
+    }, req.user.id);
     res.status(201).json(share);
   } catch (error) {
     console.error('Error creating share:', error);
-    res.status(500).json({ error: 'Failed to create share' });
+    if (error.message === 'Unauthorized') {
+      res.status(403).json({ error: 'You do not have permission to share this snippet' });
+    } else if (error.message === 'Invalid snippet ID') {
+      res.status(400).json({ error: 'Invalid snippet ID provided' });
+    } else {
+      res.status(500).json({ error: 'Failed to create share' });
+    }
   }
 });
 
@@ -57,7 +63,7 @@ router.get('/:id', async (req, res) => {
 router.get('/snippet/:snippetId', authenticateToken, async (req, res) => {
   try {
     const { snippetId } = req.params;
-    const shares = await shareRepository.getSharesBySnippetId(snippetId);
+    const shares = await shareRepository.getSharesBySnippetId(snippetId, req.user.id);
     res.json(shares);
   } catch (error) {
     console.error('Error listing shares:', error);
@@ -68,7 +74,7 @@ router.get('/snippet/:snippetId', authenticateToken, async (req, res) => {
 router.delete('/:id', authenticateToken, async (req, res) => {
   try {
     const { id } = req.params;
-    await shareRepository.deleteShare(id);
+    await shareRepository.deleteShare(id, req.user.id);
     res.json({ success: true });
   } catch (error) {
     console.error('Error deleting share:', error);

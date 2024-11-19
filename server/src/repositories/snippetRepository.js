@@ -18,21 +18,21 @@ class SnippetRepository {
     const db = getDb();
     
     if (!this.selectAllStmt) {
-      // Basic snippet data with categories
       this.selectAllStmt = db.prepare(`
         SELECT 
           s.id,
           s.title,
           s.description,
           datetime(s.updated_at) || 'Z' as updated_at,
+          s.user_id,
           GROUP_CONCAT(DISTINCT c.name) as categories
         FROM snippets s
         LEFT JOIN categories c ON s.id = c.snippet_id
+        WHERE s.user_id = ?
         GROUP BY s.id
         ORDER BY s.updated_at DESC
       `);
 
-      // Get fragments for a snippet
       this.selectFragmentsStmt = db.prepare(`
         SELECT id, file_name, code, language, position
         FROM fragments
@@ -40,16 +40,15 @@ class SnippetRepository {
         ORDER BY position
       `);
 
-      // Insert new snippet
       this.insertSnippetStmt = db.prepare(`
         INSERT INTO snippets (
           title, 
           description, 
-          updated_at
-        ) VALUES (?, ?, datetime('now', 'utc'))
+          updated_at,
+          user_id
+        ) VALUES (?, ?, datetime('now', 'utc'), ?)
       `);
 
-      // Insert fragment with language
       this.insertFragmentStmt = db.prepare(`
         INSERT INTO fragments (
           snippet_id,
@@ -60,47 +59,55 @@ class SnippetRepository {
         ) VALUES (?, ?, ?, ?, ?)
       `);
 
-      // Insert category
       this.insertCategoryStmt = db.prepare(`
         INSERT INTO categories (snippet_id, name) VALUES (?, ?)
       `);
 
-      // Update snippet
       this.updateSnippetStmt = db.prepare(`
         UPDATE snippets 
         SET title = ?, 
             description = ?,
             updated_at = datetime('now', 'utc')
-        WHERE id = ?
+        WHERE id = ? AND user_id = ?
       `);
 
-      // Delete fragments
       this.deleteFragmentsStmt = db.prepare(`
-        DELETE FROM fragments WHERE snippet_id = ?
+        DELETE FROM fragments 
+        WHERE snippet_id = ? 
+        AND EXISTS (
+          SELECT 1 FROM snippets 
+          WHERE snippets.id = fragments.snippet_id 
+          AND snippets.user_id = ?
+        )
       `);
 
-      // Delete categories
       this.deleteCategoriesStmt = db.prepare(`
-        DELETE FROM categories WHERE snippet_id = ?
+        DELETE FROM categories 
+        WHERE snippet_id = ?
+        AND EXISTS (
+          SELECT 1 FROM snippets 
+          WHERE snippets.id = categories.snippet_id 
+          AND snippets.user_id = ?
+        )
       `);
 
-      // Get snippet by ID
       this.selectByIdStmt = db.prepare(`
         SELECT 
           s.id,
           s.title,
           s.description,
           datetime(s.updated_at) || 'Z' as updated_at,
+          s.user_id,
           GROUP_CONCAT(DISTINCT c.name) as categories
         FROM snippets s
         LEFT JOIN categories c ON s.id = c.snippet_id
-        WHERE s.id = ?
+        WHERE s.id = ? AND s.user_id = ?
         GROUP BY s.id
       `);
 
-      // Delete snippet
       this.deleteSnippetStmt = db.prepare(`
-        DELETE FROM snippets WHERE id = ?
+        DELETE FROM snippets 
+        WHERE id = ? AND user_id = ?
       `);
     }
   }
@@ -117,10 +124,10 @@ class SnippetRepository {
     };
   }
 
-  findAll() {
+  findAll(userId) {
     this.#initializeStatements();
     try {
-      const snippets = this.selectAllStmt.all();
+      const snippets = this.selectAllStmt.all(userId);
       return snippets.map(this.#processSnippet.bind(this));
     } catch (error) {
       console.error('Error in findAll:', error);
@@ -128,17 +135,15 @@ class SnippetRepository {
     }
   }
 
-  create({ title, description, categories = [], fragments = [] }) {
+  create({ title, description, categories = [], fragments = [], userId }) {
     this.#initializeStatements();
     try {
       const db = getDb();
       
       return db.transaction(() => {
-        // Insert snippet
-        const insertResult = this.insertSnippetStmt.run(title, description);
+        const insertResult = this.insertSnippetStmt.run(title, description, userId);
         const snippetId = insertResult.lastInsertRowid;
         
-        // Insert fragments with their individual languages
         fragments.forEach((fragment, index) => {
           this.insertFragmentStmt.run(
             snippetId,
@@ -149,7 +154,6 @@ class SnippetRepository {
           );
         });
         
-        // Insert categories
         if (categories.length > 0) {
           for (const category of categories) {
             if (category.trim()) {
@@ -158,8 +162,7 @@ class SnippetRepository {
           }
         }
         
-        // Get created snippet with categories and fragments
-        const created = this.selectByIdStmt.get(snippetId);
+        const created = this.selectByIdStmt.get(snippetId, userId);
         return this.#processSnippet(created);
       })();
     } catch (error) {
@@ -168,17 +171,15 @@ class SnippetRepository {
     }
   }
 
-  update(id, { title, description, categories = [], fragments = [] }) {
+  update(id, { title, description, categories = [], fragments = [] }, userId) {
     this.#initializeStatements();
     try {
       const db = getDb();
       
       return db.transaction(() => {
-        // Update snippet
-        this.updateSnippetStmt.run(title, description, id);
+        this.updateSnippetStmt.run(title, description, id, userId);
         
-        // Update fragments
-        this.deleteFragmentsStmt.run(id);
+        this.deleteFragmentsStmt.run(id, userId);
         fragments.forEach((fragment, index) => {
           this.insertFragmentStmt.run(
             id,
@@ -189,16 +190,14 @@ class SnippetRepository {
           );
         });
         
-        // Update categories
-        this.deleteCategoriesStmt.run(id);
+        this.deleteCategoriesStmt.run(id, userId);
         for (const category of categories) {
           if (category.trim()) {
             this.insertCategoryStmt.run(id, category.trim().toLowerCase());
           }
         }
         
-        // Get updated snippet with categories and fragments
-        const updated = this.selectByIdStmt.get(id);
+        const updated = this.selectByIdStmt.get(id, userId);
         return this.#processSnippet(updated);
       })();
     } catch (error) {
@@ -207,16 +206,15 @@ class SnippetRepository {
     }
   }
 
-  delete(id) {
+  delete(id, userId) {
     this.#initializeStatements();
     try {
       const db = getDb();
       
       return db.transaction(() => {
-        // Get snippet before deletion
-        const snippet = this.selectByIdStmt.get(id);
+        const snippet = this.selectByIdStmt.get(id, userId);
         if (snippet) {
-          this.deleteSnippetStmt.run(id);
+          this.deleteSnippetStmt.run(id, userId);
           return this.#processSnippet(snippet);
         }
         return null;
@@ -227,10 +225,10 @@ class SnippetRepository {
     }
   }
 
-  findById(id) {
+  findById(id, userId) {
     this.#initializeStatements();
     try {
-      const snippet = this.selectByIdStmt.get(id);
+      const snippet = this.selectByIdStmt.get(id, userId);
       return this.#processSnippet(snippet);
     } catch (error) {
       console.error('Error in findById:', error);

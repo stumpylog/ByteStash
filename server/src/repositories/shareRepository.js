@@ -7,7 +7,7 @@ class ShareRepository {
     this.getShareStmt = null;
     this.getSharesBySnippetIdStmt = null;
     this.deleteShareStmt = null;
-    this.incrementViewCountStmt = null;
+    this.getSnippetOwnerStmt = null;
   }
 
   #initializeStatements() {
@@ -23,13 +23,6 @@ class ShareRepository {
         ) VALUES (?, ?, ?, datetime('now', '+' || ? || ' seconds'))
       `);
 
-      this.getFragmentsStmt = db.prepare(`
-        SELECT id, file_name, code, language, position
-        FROM fragments
-        WHERE snippet_id = ?
-        ORDER BY position
-      `);
-
       this.getShareStmt = db.prepare(`
         SELECT 
           ss.id as share_id,
@@ -40,6 +33,7 @@ class ShareRepository {
           s.id,
           s.title,
           s.description,
+          s.user_id,
           datetime(s.updated_at) || 'Z' as updated_at,
           GROUP_CONCAT(DISTINCT c.name) as categories
         FROM shared_snippets ss
@@ -54,12 +48,28 @@ class ShareRepository {
           ss.*,
           datetime(ss.expires_at) < datetime('now') as expired
         FROM shared_snippets ss
-        WHERE ss.snippet_id = ?
+        JOIN snippets s ON s.id = ss.snippet_id
+        WHERE ss.snippet_id = ? AND s.user_id = ?
         ORDER BY ss.created_at DESC
       `);
 
       this.deleteShareStmt = db.prepare(`
-        DELETE FROM shared_snippets WHERE id = ?
+        DELETE FROM shared_snippets 
+        WHERE id = ? 
+        AND snippet_id IN (
+          SELECT id FROM snippets WHERE user_id = ?
+        )
+      `);
+
+      this.getSnippetOwnerStmt = db.prepare(`
+        SELECT user_id FROM snippets WHERE id = ?
+      `);
+
+      this.getFragmentsStmt = db.prepare(`
+        SELECT id, file_name, code, language, position
+        FROM fragments
+        WHERE snippet_id = ?
+        ORDER BY position
       `);
     }
   }
@@ -86,24 +96,33 @@ class ShareRepository {
     };
   }
 
-  async createShare({ snippetId, requiresAuth, expiresIn }) {
+  async createShare({ snippetId, requiresAuth, expiresIn }, userId) {
     this.#initializeStatements();
     
+    const snippetIdInt = parseInt(snippetId, 10);
+    if (isNaN(snippetIdInt)) {
+      throw new Error('Invalid snippet ID');
+    }
+    
+    const owner = this.getSnippetOwnerStmt.get(snippetIdInt);
+    if (!owner || owner.user_id !== userId) {
+      throw new Error('Unauthorized');
+    }
+
     const shareId = crypto.randomBytes(16).toString('hex');
     
     try {
       this.createShareStmt.run(
         shareId,
-        snippetId,
+        snippetIdInt,
         requiresAuth ? 1 : 0,
         expiresIn
       );
       
       return {
         id: shareId,
-        snippetId,
+        snippetId: snippetIdInt,
         requiresAuth,
-        viewCount: 0,
         expiresIn
       };
     } catch (error) {
@@ -122,32 +141,27 @@ class ShareRepository {
       throw error;
     }
   }
-  async getSharesBySnippetId(snippetId) {
+
+  async getSharesBySnippetId(snippetId, userId) {
     this.#initializeStatements();
     try {
-      return this.getSharesBySnippetIdStmt.all(snippetId);
+      const snippetIdInt = parseInt(snippetId, 10);
+      if (isNaN(snippetIdInt)) {
+        throw new Error('Invalid snippet ID');
+      }
+      return this.getSharesBySnippetIdStmt.all(snippetIdInt, userId);
     } catch (error) {
       console.error('Error in getSharesBySnippetId:', error);
       throw error;
     }
   }
 
-  async deleteShare(id) {
+  async deleteShare(id, userId) {
     this.#initializeStatements();
     try {
-      return this.deleteShareStmt.run(id);
+      return this.deleteShareStmt.run(id, userId);
     } catch (error) {
       console.error('Error in deleteShare:', error);
-      throw error;
-    }
-  }
-
-  async incrementViewCount(id) {
-    this.#initializeStatements();
-    try {
-      return this.incrementViewCountStmt.run(id);
-    } catch (error) {
-      console.error('Error in incrementViewCount:', error);
       throw error;
     }
   }
