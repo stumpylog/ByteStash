@@ -213,6 +213,11 @@ const LANGUAGE_MAPPING: LanguageMapping = {
     monacoAlias: 'elm',
     label: 'elm'
   },
+  apex: {
+    aliases: [],
+    monacoAlias: 'apex',
+    label: 'apex'
+  },
 
   // Smart Contract Languages
   solidity: {
