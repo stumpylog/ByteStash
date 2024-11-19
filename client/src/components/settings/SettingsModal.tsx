@@ -225,7 +225,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
     >
       <div className="pb-4">
         <div className="space-y-4">
-          {/* View Settings */}
           <SettingsGroup title="View Settings">
             <SettingRow 
               label="Compact View" 
@@ -285,7 +284,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             </SettingRow>
           </SettingsGroup>
 
-          {/* Category Settings */}
           <SettingsGroup title="Category Settings">
             <SettingRow 
               label="Show Categories" 
@@ -315,7 +313,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             )}
           </SettingsGroup>
 
-          {/* Search Settings */}
           <SettingsGroup title="Search Settings">
             <SettingRow 
               label="Include Code in Search" 
@@ -330,19 +327,18 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             </SettingRow>
           </SettingsGroup>
 
-          {/* Data Management */}
           {!isPublicView && (
             <SettingsGroup title="Data Management">
               <div className="flex gap-2">
                 <button
                   onClick={handleExport}
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors text-sm"
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors text-sm text-gray-300"
                 >
                   <Download size={16} />
                   Export Snippets
                 </button>
                 <label
-                  className={`flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors text-sm cursor-pointer ${
+                  className={`flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors text-sm cursor-pointer text-gray-300 ${
                     importing ? 'opacity-50 cursor-not-allowed' : ''
                   }`}
                 >
@@ -395,7 +391,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
             </SettingsGroup>
           )}
 
-          {/* Links Section */}
           <div className="border-t border-gray-700 pt-4 mt-4">
             <div className="flex gap-4 justify-center">
               <button
