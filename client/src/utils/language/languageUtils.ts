@@ -1,3 +1,4 @@
+import { CodeFragment } from '../../types/snippets';
 import * as monaco from 'monaco-editor';
 
 interface LanguageConfig {
@@ -333,6 +334,18 @@ export const getAllLanguageAliases = (): Record<string, string[]> => {
     acc[lang] = [...config.aliases];
     return acc;
   }, {} as Record<string, string[]>);
+};
+
+export const getUniqueLanguages = (fragments: CodeFragment[]): string => {
+  if (!fragments || fragments.length === 0) {
+    return 'No language';
+  }
+
+  const uniqueLanguages = [...new Set(
+    fragments.map(fragment => getLanguageLabel(fragment.language))
+  )];
+
+  return uniqueLanguages.join(', ');
 };
 
 export const configureMonaco = () => {

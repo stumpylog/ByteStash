@@ -3,7 +3,7 @@ import { FileCode, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { Snippet } from '../../../types/snippets';
 import CategoryList from '../../categories/CategoryList';
-import { getLanguageLabel } from '../../../utils/language/languageUtils';
+import { getLanguageLabel, getUniqueLanguages } from '../../../utils/language/languageUtils';
 import { FullCodeBlock } from '../../editor/FullCodeBlock';
 import Linkify from 'linkify-react';
 import { linkifyOptions } from '../../../constants/linkify';
@@ -30,27 +30,28 @@ export const FullCodeView: React.FC<FullCodeViewProps> = ({
 
   return (
     <div className={className}>
-      <div className="mb-8">
+      <div className="mb-4">
         {showTitle && (
-          <h1 className="text-3xl font-bold mb-4">{snippet.title}</h1>
+          <h1 className="text-3xl font-bold mb-2">{snippet.title}</h1>
         )}
-        <p className="text-gray-300 mb-4">
-          <Linkify options={linkifyOptions}>
-            {snippet.description || 'No description available'}
-          </Linkify>
-        </p>
-        
-        <div className="flex items-center gap-4 text-sm text-gray-400">
+        <div className="flex items-center gap-4 text-sm text-gray-400 mb-2">
+          <div className="truncate">{getUniqueLanguages(snippet.fragments)}</div>
           <div className="flex items-center gap-1">
             <Clock size={16} />
             <span>Updated {formatDistanceToNow(new Date(snippet.updated_at), { addSuffix: true })}</span>
           </div>
         </div>
 
+        <p className="text-gray-300 mb-2">
+          <Linkify options={linkifyOptions}>
+            {snippet.description || 'No description available'}
+          </Linkify>
+        </p>
+
         <CategoryList
           categories={snippet.categories}
           onCategoryClick={handleCategoryClick}
-          className="mt-4"
+          className="mt-2 mb-2"
           variant="clickable"
           showAll={true}
         />
