@@ -27,6 +27,7 @@ export interface SearchAndFilterProps {
   allCategories: string[];
   selectedCategories: string[];
   onCategoryClick: (category: string) => void;
+  hideNewSnippet?: boolean;
 }
 
 export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({ 
@@ -43,7 +44,8 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
   openNewSnippetModal,
   allCategories,
   selectedCategories,
-  onCategoryClick
+  onCategoryClick,
+  hideNewSnippet = false
 }) => {
   return (
     <div className="flex flex-wrap items-center gap-2 mb-6">
@@ -103,13 +105,15 @@ export const SearchAndFilter: React.FC<SearchAndFilterProps> = ({
           variant="secondary"
           className="h-10 px-4"
         />
-        <IconButton
-          icon={<Plus size={20} />}
-          label="New Snippet"
-          onClick={openNewSnippetModal}
-          variant="action"
-          className="h-10 pl-2 pr-4"
-        />
+        {!hideNewSnippet && (
+          <IconButton
+            icon={<Plus size={20} />}
+            label="New Snippet"
+            onClick={openNewSnippetModal}
+            variant="action"
+            className="h-10 pl-2 pr-4"
+          />
+        )}
       </div>
     </div>
   );

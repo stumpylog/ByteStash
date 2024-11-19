@@ -41,6 +41,7 @@ export interface SettingsModalProps {
   snippets: Snippet[];
   addSnippet: (snippet: Omit<Snippet, 'id' | 'updated_at'>, toast: boolean) => Promise<Snippet>;
   reloadSnippets: () => void;
+  isPublicView: boolean;
 }
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ 
@@ -50,7 +51,8 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
   onSettingsChange,
   snippets,
   addSnippet,
-  reloadSnippets
+  reloadSnippets,
+  isPublicView
 }) => {
   const [compactView, setCompactView] = useState(settings.compactView);
   const [showCodePreview, setShowCodePreview] = useState(settings.showCodePreview);
@@ -329,67 +331,69 @@ const SettingsModal: React.FC<SettingsModalProps> = ({
           </SettingsGroup>
 
           {/* Data Management */}
-          <SettingsGroup title="Data Management">
-            <div className="flex gap-2">
-              <button
-                onClick={handleExport}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors text-sm"
-              >
-                <Download size={16} />
-                Export Snippets
-              </button>
-              <label
-                className={`flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors text-sm cursor-pointer ${
-                  importing ? 'opacity-50 cursor-not-allowed' : ''
-                }`}
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".json"
-                  onChange={handleImportFile}
-                  disabled={importing}
-                  className="hidden"
-                />
-                <Upload size={16} />
-                Import Snippets
-              </label>
-            </div>
-
-            {importProgress && (
-              <div className="mt-4 space-y-2">
-                <div className="flex justify-between text-sm text-gray-300">
-                  <span>Importing snippets...</span>
-                  <span>{importProgress.current} / {importProgress.total}</span>
-                </div>
-                
-                <div className="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-blue-600 transition-all duration-200"
-                    style={{
-                      width: `${(importProgress.current / importProgress.total) * 100}%`
-                    }}
+          {!isPublicView && (
+            <SettingsGroup title="Data Management">
+              <div className="flex gap-2">
+                <button
+                  onClick={handleExport}
+                  className="flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors text-sm"
+                >
+                  <Download size={16} />
+                  Export Snippets
+                </button>
+                <label
+                  className={`flex items-center gap-2 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-md transition-colors text-sm cursor-pointer ${
+                    importing ? 'opacity-50 cursor-not-allowed' : ''
+                  }`}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".json"
+                    onChange={handleImportFile}
+                    disabled={importing}
+                    className="hidden"
                   />
-                </div>
-
-                {importProgress.errors.length > 0 && (
-                  <div className="mt-2 text-sm">
-                    <div className="flex items-center gap-1 text-red-400">
-                      <AlertCircle size={14} />
-                      <span>{importProgress.errors.length} errors occurred</span>
-                    </div>
-                    <div className="mt-1 max-h-24 overflow-y-auto">
-                      {importProgress.errors.map((error, index) => (
-                        <div key={index} className="text-red-400 text-xs">
-                          Failed to import "{error.title}": {error.error}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                  <Upload size={16} />
+                  Import Snippets
+                </label>
               </div>
-            )}
-          </SettingsGroup>
+
+              {importProgress && (
+                <div className="mt-4 space-y-2">
+                  <div className="flex justify-between text-sm text-gray-300">
+                    <span>Importing snippets...</span>
+                    <span>{importProgress.current} / {importProgress.total}</span>
+                  </div>
+                  
+                  <div className="w-full h-2 bg-gray-700 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-blue-600 transition-all duration-200"
+                      style={{
+                        width: `${(importProgress.current / importProgress.total) * 100}%`
+                      }}
+                    />
+                  </div>
+
+                  {importProgress.errors.length > 0 && (
+                    <div className="mt-2 text-sm">
+                      <div className="flex items-center gap-1 text-red-400">
+                        <AlertCircle size={14} />
+                        <span>{importProgress.errors.length} errors occurred</span>
+                      </div>
+                      <div className="mt-1 max-h-24 overflow-y-auto">
+                        {importProgress.errors.map((error, index) => (
+                          <div key={index} className="text-red-400 text-xs">
+                            Failed to import "{error.title}": {error.error}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </SettingsGroup>
+          )}
 
           {/* Links Section */}
           <div className="border-t border-gray-700 pt-4 mt-4">

@@ -1,42 +1,47 @@
 import React, { useState, useMemo, useCallback, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
-import { useSnippets } from '../../../hooks/useSnippets';
-import { useSettings } from '../../../hooks/useSettings';
-import { Snippet } from '../../../types/snippets';
-import { getLanguageLabel, initializeMonaco } from '../../../utils/language/languageUtils';
-import { SearchAndFilter } from '../../search/SearchAndFilter';
-import SnippetList from '../list/SnippetList';
-import EditSnippetModal from '../edit/EditSnippetModal';
-import SettingsModal from '../../settings/SettingsModal';
-import { ShareMenu } from '../share/ShareMenu';
-import SnippetModal from './SnippetModal';
-import { PageContainer } from '../../common/layout/PageContainer';
-import { UserDropdown } from '../../auth/UserDropdown';
+import { useSettings } from '../../../../hooks/useSettings';
+import { Snippet } from '../../../../types/snippets';
+import { getLanguageLabel, initializeMonaco } from '../../../../utils/language/languageUtils';
+import { SearchAndFilter } from '../../../search/SearchAndFilter';
+import SnippetList from '../../list/SnippetList';
+import SettingsModal from '../../../settings/SettingsModal';
+import SnippetModal from '../SnippetModal';
+import { PageContainer } from '../../../common/layout/PageContainer';
+import { Link } from 'react-router-dom';
+import { fetchPublicSnippets } from '../../../../utils/api/snippets';
 
-const APP_VERSION = "1.4.1";
-
-const SnippetStorage: React.FC = () => {
-  const { snippets, isLoading, addSnippet, updateSnippet, removeSnippet, reloadSnippets } = useSnippets();
+const PublicSnippetStorage: React.FC = () => {
   const { 
     viewMode, setViewMode, compactView, showCodePreview, 
     previewLines, includeCodeInSearch, updateSettings,
     showCategories, expandCategories, showLineNumbers
   } = useSettings();
 
+  const [snippets, setSnippets] = useState<Snippet[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState('');
   const [selectedSnippet, setSelectedSnippet] = useState<Snippet | null>(null);
-  const [isEditSnippetModalOpen, setIsEditSnippetModalOpen] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  const [snippetToEdit, setSnippetToEdit] = useState<Snippet | null>(null);
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'alpha-asc' | 'alpha-desc'>('newest');
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-  const [isShareMenuOpen, setIsShareMenuOpen] = useState(false);
-  const [snippetToShare, setSnippetToShare] = useState<Snippet | null>(null);
 
   useEffect(() => {
     initializeMonaco();
+    loadSnippets();
   }, []);
+
+  const loadSnippets = async () => {
+    try {
+      const fetchedSnippets = await fetchPublicSnippets();
+      setSnippets(fetchedSnippets);
+    } catch (error) {
+      console.error('Failed to load public snippets:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSearchTermChange = useCallback((term: string) => {
     setSearchTerm(term);
@@ -49,16 +54,6 @@ const SnippetStorage: React.FC = () => {
       }
       return [...prev, category];
     });
-  }, []);
-
-  const openShareMenu = useCallback((snippet: Snippet) => {
-    setSnippetToShare(snippet);
-    setIsShareMenuOpen(true);
-  }, []);
-  
-  const closeShareMenu = useCallback(() => {
-    setSnippetToShare(null);
-    setIsShareMenuOpen(false);
   }, []);
 
   const languages = useMemo(() => {
@@ -117,42 +112,6 @@ const SnippetStorage: React.FC = () => {
   const openSnippet = useCallback((snippet: Snippet) => setSelectedSnippet(snippet), []);
   const closeSnippet = useCallback(() => setSelectedSnippet(null), []);
 
-  const openEditSnippetModal = useCallback((snippet: Snippet | null = null) => {
-    setSnippetToEdit(snippet);
-    setIsEditSnippetModalOpen(true);
-  }, []);
-
-  const closeEditSnippetModal = useCallback(() => {
-    setSnippetToEdit(null);
-    setIsEditSnippetModalOpen(false);
-  }, []);
-
-  const handleSnippetSubmit = useCallback(async (snippetData: Omit<Snippet, 'id' | 'updated_at'>) => {
-    try {
-      if (snippetToEdit) {
-        await updateSnippet(snippetToEdit.id, snippetData);
-      } else {
-        await addSnippet(snippetData);
-      }
-      await reloadSnippets();
-      closeEditSnippetModal();
-    } catch (error) {
-      console.error('Error saving snippet:', error);
-      throw error;
-    }
-  }, [snippetToEdit, updateSnippet, addSnippet, closeEditSnippetModal, reloadSnippets]);
-
-  const handleDeleteSnippet = useCallback(async (id: string) => {
-    try {
-      await removeSnippet(id);
-      if (selectedSnippet && selectedSnippet.id === id) {
-        closeSnippet();
-      }
-    } catch (error) {
-      console.error('Failed to delete snippet:', error);
-    }
-  }, [removeSnippet, selectedSnippet, closeSnippet]);
-
   if (isLoading) {
     return (
       <PageContainer>
@@ -174,9 +133,10 @@ const SnippetStorage: React.FC = () => {
       <div className="flex justify-between items-start mb-4">
         <div className="flex items-end gap-2">
           <h1 className="text-4xl font-bold text-gray-100">ByteStash</h1>
-          <span className="text-sm text-gray-400 mb-0">v{APP_VERSION}</span>
+          <Link to="/login" className="text-blue-400 hover:text-blue-300 ml-4">
+            Sign in
+          </Link>
         </div>
-        <UserDropdown />
       </div>
       
       <SearchAndFilter
@@ -190,10 +150,11 @@ const SnippetStorage: React.FC = () => {
         viewMode={viewMode}
         setViewMode={setViewMode}
         openSettingsModal={() => setIsSettingsModalOpen(true)}
-        openNewSnippetModal={() => openEditSnippetModal(null)}
+        openNewSnippetModal={() => {}}
         allCategories={allCategories}
         selectedCategories={selectedCategories}
         onCategoryClick={handleCategoryClick}
+        hideNewSnippet
       />
       
       {selectedCategories.length > 0 && (
@@ -216,17 +177,17 @@ const SnippetStorage: React.FC = () => {
         snippets={filteredSnippets}
         viewMode={viewMode}
         onOpen={openSnippet}
-        onDelete={handleDeleteSnippet}
-        onEdit={openEditSnippetModal}
+        onDelete={() => {}}
+        onEdit={() => {}}
         onCategoryClick={handleCategoryClick}
-        onShare={openShareMenu}
+        onShare={() => {}}
         compactView={compactView}
         showCodePreview={showCodePreview}
         previewLines={previewLines}
         showCategories={showCategories}
         expandCategories={expandCategories}
         showLineNumbers={showLineNumbers}
-        isPublicView={false}
+        isPublicView={true}
       />
 
       <SnippetModal
@@ -235,15 +196,6 @@ const SnippetStorage: React.FC = () => {
         onClose={closeSnippet}
         onCategoryClick={handleCategoryClick}
         showLineNumbers={showLineNumbers}
-      />
-
-      <EditSnippetModal
-        isOpen={isEditSnippetModalOpen}
-        onClose={closeEditSnippetModal}
-        onSubmit={handleSnippetSubmit}
-        snippetToEdit={snippetToEdit}
-        showLineNumbers={showLineNumbers}
-        allCategories={allCategories}
       />
 
       <SettingsModal
@@ -259,21 +211,13 @@ const SnippetStorage: React.FC = () => {
           showLineNumbers 
         }}
         onSettingsChange={updateSettings}
-        snippets={filteredSnippets}
-        addSnippet={addSnippet}
-        reloadSnippets={reloadSnippets}
-        isPublicView={false}
+        snippets={[]}
+        addSnippet={() => Promise.resolve({} as Snippet)}
+        reloadSnippets={() => {}}
+        isPublicView={true}
       />
-
-      {snippetToShare && (
-        <ShareMenu
-          snippetId={snippetToShare.id}
-          isOpen={isShareMenuOpen}
-          onClose={closeShareMenu}
-        />
-      )}
     </div>
   );
 };
 
-export default SnippetStorage;
+export default PublicSnippetStorage;

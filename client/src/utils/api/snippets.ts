@@ -1,5 +1,7 @@
 import { snippetService } from '../../service/snippetService';
 import type { Snippet } from '../../types/snippets';
+import { apiClient } from './apiClient';
+import { API_ENDPOINTS } from '../../constants/api';
 import { createCustomEvent, EVENTS } from '../../constants/events';
 
 export const fetchSnippets = async (): Promise<Snippet[]> => {
@@ -7,6 +9,15 @@ export const fetchSnippets = async (): Promise<Snippet[]> => {
     return await snippetService.getAllSnippets();
   } catch (error) {
     console.error('Error fetching snippets:', error);
+    throw error;
+  }
+};
+
+export const fetchPublicSnippets = async (): Promise<Snippet[]> => {
+  try {
+    return await apiClient.get<Snippet[]>(`${API_ENDPOINTS.PUBLIC}`);
+  } catch (error) {
+    console.error('Error fetching public snippets:', error);
     throw error;
   }
 };
@@ -53,6 +64,15 @@ export const getSnippetById = async (id: string): Promise<Snippet> => {
     return await snippetService.getSnippetById(id);
   } catch (error) {
     console.error('Error fetching snippet:', error);
+    throw error;
+  }
+};
+
+export const getPublicSnippetById = async (id: string): Promise<Snippet> => {
+  try {
+    return await apiClient.get<Snippet>(`${API_ENDPOINTS.PUBLIC}/${id}`);
+  } catch (error) {
+    console.error('Error fetching public snippet:', error);
     throw error;
   }
 };

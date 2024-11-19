@@ -14,6 +14,7 @@ interface FullCodeViewProps {
   onCategoryClick?: (category: string) => void;
   showLineNumbers?: boolean;
   className?: string;
+  isPublicView?: boolean;
 }
 
 export const FullCodeView: React.FC<FullCodeViewProps> = ({
@@ -21,7 +22,8 @@ export const FullCodeView: React.FC<FullCodeViewProps> = ({
   snippet,
   onCategoryClick,
   showLineNumbers = true,
-  className = ''
+  className = '',
+  isPublicView = false
 }) => {
   const handleCategoryClick = (e: React.MouseEvent, category: string) => {
     e.preventDefault();
@@ -41,6 +43,12 @@ export const FullCodeView: React.FC<FullCodeViewProps> = ({
             <span>Updated {formatDistanceToNow(new Date(snippet.updated_at), { addSuffix: true })}</span>
           </div>
         </div>
+
+        {isPublicView && snippet.username && (
+          <div className="flex items-center gap-1">
+            <span>by {snippet.username}</span>
+          </div>
+        )}
 
         <p className="text-gray-300 mb-2">
           <Linkify options={linkifyOptions}>

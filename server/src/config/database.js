@@ -4,6 +4,7 @@ const fs = require('fs');
 const { up_v1_4_0 } = require('./migrations/20241111-migration');
 const { up_v1_5_0 } = require('./migrations/20241117-migration');
 const Logger = require('../logger');
+const { up_v1_5_0_public } = require('./migrations/20241119-migration');
 
 let db = null;
 let checkpointInterval = null;
@@ -83,7 +84,8 @@ function createInitialSchema(db) {
       title TEXT NOT NULL,
       description TEXT,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      user_id INTEGER REFERENCES users(id)
+      user_id INTEGER REFERENCES users(id),
+      is_public BOOLEAN DEFAULT FALSE
     );
 
     CREATE TABLE IF NOT EXISTS categories (
@@ -117,6 +119,7 @@ function createInitialSchema(db) {
     CREATE INDEX IF NOT EXISTS idx_categories_snippet_id ON categories(snippet_id);
     CREATE INDEX IF NOT EXISTS idx_fragments_snippet_id ON fragments(snippet_id);
     CREATE INDEX IF NOT EXISTS idx_shared_snippets_snippet_id ON shared_snippets(snippet_id);
+    CREATE INDEX idx_snippets_is_public ON snippets(is_public);
   `);
 }
 
@@ -145,6 +148,7 @@ function initializeDatabase() {
       
       up_v1_4_0(db);
       up_v1_5_0(db);
+      up_v1_5_0_public(db);
     }
 
     startCheckpointInterval();

@@ -5,6 +5,7 @@ import { register } from '../../utils/api/auth';
 import { PageContainer } from '../common/layout/PageContainer';
 import { useToast } from '../../hooks/useToast';
 import { AlertCircle } from 'lucide-react';
+import { ROUTES } from '../../constants/routes';
 
 export const RegisterPage: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -72,6 +73,10 @@ export const RegisterPage: React.FC = () => {
                 Or{' '}
                 <Link to="/login" className="text-blue-400 hover:text-blue-300">
                   sign in to your account
+                </Link>
+                {' '}or{' '}
+                <Link to={ROUTES.PUBLIC_SNIPPETS} className="text-blue-400 hover:text-blue-300">
+                  browse public snippets
                 </Link>
               </>
             ) : (

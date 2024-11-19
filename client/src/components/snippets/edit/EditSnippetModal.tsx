@@ -8,6 +8,7 @@ import Modal from '../../common/modals/Modal';
 import CategoryList from '../../categories/CategoryList';
 import CategorySuggestions from '../../categories/CategorySuggestions';
 import { FragmentEditor } from './FragmentEditor';
+import { Switch } from '../../../components/common/switch/Switch';
 
 export interface EditSnippetModalProps {
   isOpen: boolean;
@@ -33,6 +34,7 @@ const EditSnippetModal: React.FC<EditSnippetModalProps> = ({
   const [categoryInput, setCategoryInput] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPublic, setIsPublic] = useState(snippetToEdit?.is_public || false);
 
   const resetForm = () => {
     setTitle('');
@@ -55,6 +57,7 @@ const EditSnippetModal: React.FC<EditSnippetModalProps> = ({
         setDescription(snippetToEdit.description || '');
         setFragments(JSON.parse(JSON.stringify(snippetToEdit.fragments || [])));
         setCategories(snippetToEdit.categories || []);
+        setIsPublic(snippetToEdit.is_public || false);
       } else {
         resetForm();
       }
@@ -141,7 +144,8 @@ const EditSnippetModal: React.FC<EditSnippetModalProps> = ({
       title: title.slice(0, 255),
       description: description,
       fragments: fragments.map((f, idx) => ({ ...f, position: idx })),
-      categories: categories
+      categories: categories,
+      is_public: isPublic ? 1 : 0
     };
 
     try {
@@ -256,6 +260,21 @@ const EditSnippetModal: React.FC<EditSnippetModalProps> = ({
                   className="mt-2"
                   variant="removable"
                 />
+              </div>
+
+              {/* Public snippet section */}
+              <div className="space-y-1">
+                <label className="flex items-center gap-2">
+                  <Switch 
+                    id="isPublic"
+                    checked={!!isPublic}
+                    onChange={setIsPublic}
+                  />
+                  <span className="text-sm font-medium text-gray-300">Make snippet public</span>
+                </label>
+                <p className="text-sm text-gray-400">
+                  Public snippets can be viewed by anyone without authentication
+                </p>
               </div>
 
               {/* Code Fragments section */}
