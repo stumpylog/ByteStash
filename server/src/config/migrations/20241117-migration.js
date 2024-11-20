@@ -9,7 +9,7 @@ function needsMigration(db) {
     `).get();
 
     if (!hasUsersTable) {
-      Logger.debug('Users table does not exist, migration needed');
+      Logger.debug('v1.5.0 - Users table does not exist, migration needed');
       return true;
     }
 
@@ -20,7 +20,7 @@ function needsMigration(db) {
     `).get();
 
     if (hasUserIdColumn.count === 0) {
-      Logger.debug('Snippets table missing user_id column, migration needed');
+      Logger.debug('v1.5.0 - Snippets table missing user_id column, migration needed');
       return true;
     }
 
@@ -31,14 +31,14 @@ function needsMigration(db) {
     `).get();
 
     if (hasUserIdIndex.count === 0) {
-      Logger.debug('Missing user_id index, migration needed');
+      Logger.debug('v1.5.0 - Missing user_id index, migration needed');
       return true;
     }
 
-    Logger.debug('Database schema is up to date, no migration needed');
+    Logger.debug('v1.5.0 - Database schema is up to date, no migration needed');
     return false;
   } catch (error) {
-    Logger.error('Error checking migration status:', error);
+    Logger.error('v1.5.0 - Error checking migration status:', error);
     throw error;
   }
 }
@@ -68,27 +68,27 @@ async function up_v1_5_0(db) {
       CREATE INDEX idx_snippets_user_id ON snippets(user_id);
     `);
 
-    Logger.debug('Migration completed successfully');
+    Logger.debug('v1.5.0 - Migration completed successfully');
   } catch (error) {
-    Logger.error('Migration failed:', error);
+    Logger.error('v1.5.0 - Migration failed:', error);
     throw error;
   }
 }
 
 async function up_v1_5_0_snippets(db, userId) {
   try {
-    Logger.debug(`Migrating orphaned snippets to user ${userId}...`);
+    Logger.debug(`v1.5.0 - Migrating orphaned snippets to user ${userId}...`);
     
     const updateSnippets = db.prepare(`
       UPDATE snippets SET user_id = ? WHERE user_id IS NULL
     `);
 
     const result = updateSnippets.run(userId);
-    Logger.debug(`Successfully migrated ${result.changes} snippets to user ${userId}`);
+    Logger.debug(`v1.5.0 - Successfully migrated ${result.changes} snippets to user ${userId}`);
     
     return result.changes;
   } catch (error) {
-    Logger.error('Snippet migration failed:', error);
+    Logger.error('v1.5.0 - Snippet migration failed:', error);
     throw error;
   }
 }

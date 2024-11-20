@@ -72,9 +72,9 @@ async function up_v1_4_0(db) {
       `);
     })();
 
-    Logger.debug('Migration completed successfully');
+    Logger.debug('v1.4.0 - Migration completed successfully');
   } catch (error) {
-    Logger.error('Migration failed:', error);
+    Logger.error('v1.4.0 - Migration failed:', error);
     throw error;
   } finally {
     db.pragma('foreign_keys = ON');
