@@ -10,6 +10,7 @@ import { ToastProvider } from './contexts/ToastContext';
 import SnippetStorage from './components/snippets/view/SnippetStorage';
 import SharedSnippetView from './components/snippets/share/SharedSnippetView';
 import SnippetPage from './components/snippets/view/SnippetPage';
+import PublicSnippetStorage from './components/snippets/view/public/PublicSnippetStorage';
 
 const AuthenticatedApp: React.FC = () => {
   const { isAuthenticated, isLoading } = useAuth();
@@ -40,6 +41,7 @@ const App: React.FC = () => {
             <Route path={ROUTES.LOGIN} element={<LoginPage />} />
             <Route path={ROUTES.REGISTER} element={<RegisterPage />} />
             <Route path={ROUTES.SHARED_SNIPPET} element={<SharedSnippetView />} />
+            <Route path={ROUTES.PUBLIC_SNIPPETS} element={<PublicSnippetStorage />} />
             <Route path={ROUTES.SNIPPET} element={<SnippetPage />} />
             <Route path={ROUTES.HOME} element={<AuthenticatedApp />} />
           </Routes>

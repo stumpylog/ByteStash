@@ -128,7 +128,7 @@ export const ShareMenu: React.FC<ShareMenuProps> = ({ snippetId, isOpen, onClose
         </div>
       }
     >
-      <div className="space-y-6">
+      <div className="space-y-6 text-gray-100">
         <div className="space-y-4">
           <h3 className="text-lg font-medium">Create New Share Link</h3>
           

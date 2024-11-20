@@ -3,5 +3,6 @@ export const ROUTES = {
   SHARED_SNIPPET: '/s/:shareId',
   SNIPPET: '/snippets/:snippetId',
   LOGIN: '/login',
-  REGISTER: '/register'
+  REGISTER: '/register',
+  PUBLIC_SNIPPETS: '/public/snippets'
 } as const;

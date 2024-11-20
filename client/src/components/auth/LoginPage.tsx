@@ -4,6 +4,7 @@ import { useAuth } from '../../hooks/useAuth';
 import { PageContainer } from '../common/layout/PageContainer';
 import { login as loginApi } from '../../utils/api/auth';
 import { useToast } from '../../hooks/useToast';
+import { ROUTES } from '../../constants/routes';
 
 export const LoginPage: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -42,15 +43,18 @@ export const LoginPage: React.FC = () => {
             ByteStash
           </h2>
           <p className="mt-2 text-center text-sm text-gray-400">
-            Please sign in to continue
-            {authConfig?.allowNewAccounts && (
+            Please sign in to continue, {authConfig?.allowNewAccounts && (
               <>
-                {' or '}
+                {' '}create an{' '}
                 <Link to="/register" className="text-blue-400 hover:text-blue-300">
-                  create an account
+                  account
                 </Link>
+                {' '}or{' '}
               </>
             )}
+            <Link to={ROUTES.PUBLIC_SNIPPETS} className="text-blue-400 hover:text-blue-300">
+              browse public snippets
+            </Link>
           </p>
         </div>
 

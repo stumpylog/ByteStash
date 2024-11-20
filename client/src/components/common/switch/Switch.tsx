@@ -4,6 +4,7 @@ export const Switch: React.FC<{
   onChange: (checked: boolean) => void;
 }> = ({ id, checked, onChange }) => (
   <button
+    type="button"
     id={id}
     role="switch"
     aria-checked={checked}

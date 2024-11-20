@@ -14,6 +14,8 @@ export interface Snippet {
   categories: string[];
   fragments: CodeFragment[];
   share_count?: number;
+  is_public: number;
+  username?: string;
 }
 
 export interface ShareSettings {

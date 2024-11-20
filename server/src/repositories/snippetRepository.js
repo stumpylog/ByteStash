@@ -4,6 +4,7 @@ const Logger = require('../logger');
 class SnippetRepository {
   constructor() {
     this.selectAllStmt = null;
+    this.selectPublicStmt = null;
     this.insertSnippetStmt = null;
     this.insertFragmentStmt = null;
     this.insertCategoryStmt = null;
@@ -11,6 +12,7 @@ class SnippetRepository {
     this.deleteFragmentsStmt = null;
     this.deleteCategoriesStmt = null;
     this.selectByIdStmt = null;
+    this.selectPublicByIdStmt = null;
     this.deleteSnippetStmt = null;
     this.selectFragmentsStmt = null;
   }
@@ -26,19 +28,35 @@ class SnippetRepository {
           s.description,
           datetime(s.updated_at) || 'Z' as updated_at,
           s.user_id,
-          GROUP_CONCAT(DISTINCT c.name) as categories
+          s.is_public,
+          u.username,
+          GROUP_CONCAT(DISTINCT c.name) as categories,
+          (SELECT COUNT(*) FROM shared_snippets WHERE snippet_id = s.id) as share_count
         FROM snippets s
         LEFT JOIN categories c ON s.id = c.snippet_id
+        LEFT JOIN users u ON s.user_id = u.id
         WHERE s.user_id = ?
         GROUP BY s.id
         ORDER BY s.updated_at DESC
       `);
 
-      this.selectFragmentsStmt = db.prepare(`
-        SELECT id, file_name, code, language, position
-        FROM fragments
-        WHERE snippet_id = ?
-        ORDER BY position
+      this.selectPublicStmt = db.prepare(`
+        SELECT 
+          s.id,
+          s.title,
+          s.description,
+          datetime(s.updated_at) || 'Z' as updated_at,
+          s.user_id,
+          s.is_public,
+          u.username,
+          GROUP_CONCAT(DISTINCT c.name) as categories,
+          (SELECT COUNT(*) FROM shared_snippets WHERE snippet_id = s.id) as share_count
+        FROM snippets s
+        LEFT JOIN categories c ON s.id = c.snippet_id
+        LEFT JOIN users u ON s.user_id = u.id
+        WHERE s.is_public = TRUE
+        GROUP BY s.id
+        ORDER BY s.updated_at DESC
       `);
 
       this.insertSnippetStmt = db.prepare(`
@@ -46,8 +64,9 @@ class SnippetRepository {
           title, 
           description, 
           updated_at,
-          user_id
-        ) VALUES (?, ?, datetime('now', 'utc'), ?)
+          user_id,
+          is_public
+        ) VALUES (?, ?, datetime('now', 'utc'), ?, ?)
       `);
 
       this.insertFragmentStmt = db.prepare(`
@@ -68,7 +87,8 @@ class SnippetRepository {
         UPDATE snippets 
         SET title = ?, 
             description = ?,
-            updated_at = datetime('now', 'utc')
+            updated_at = datetime('now', 'utc'),
+            is_public = ?
         WHERE id = ? AND user_id = ?
       `);
 
@@ -99,16 +119,45 @@ class SnippetRepository {
           s.description,
           datetime(s.updated_at) || 'Z' as updated_at,
           s.user_id,
-          GROUP_CONCAT(DISTINCT c.name) as categories
+          s.is_public,
+          u.username,
+          GROUP_CONCAT(DISTINCT c.name) as categories,
+          (SELECT COUNT(*) FROM shared_snippets WHERE snippet_id = s.id) as share_count
         FROM snippets s
         LEFT JOIN categories c ON s.id = c.snippet_id
-        WHERE s.id = ? AND s.user_id = ?
+        LEFT JOIN users u ON s.user_id = u.id
+        WHERE s.id = ? AND (s.user_id = ? OR s.is_public = TRUE)
+        GROUP BY s.id
+      `);
+
+      this.selectPublicByIdStmt = db.prepare(`
+        SELECT 
+          s.id,
+          s.title,
+          s.description,
+          datetime(s.updated_at) || 'Z' as updated_at,
+          s.user_id,
+          s.is_public,
+          u.username,
+          GROUP_CONCAT(DISTINCT c.name) as categories,
+          (SELECT COUNT(*) FROM shared_snippets WHERE snippet_id = s.id) as share_count
+        FROM snippets s
+        LEFT JOIN categories c ON s.id = c.snippet_id
+        LEFT JOIN users u ON s.user_id = u.id
+        WHERE s.id = ? AND s.is_public = TRUE
         GROUP BY s.id
       `);
 
       this.deleteSnippetStmt = db.prepare(`
         DELETE FROM snippets 
         WHERE id = ? AND user_id = ?
+      `);
+
+      this.selectFragmentsStmt = db.prepare(`
+        SELECT id, file_name, code, language, position
+        FROM fragments
+        WHERE snippet_id = ?
+        ORDER BY position
       `);
     }
   }
@@ -121,7 +170,8 @@ class SnippetRepository {
     return {
       ...snippet,
       categories: snippet.categories ? snippet.categories.split(',') : [],
-      fragments: fragments.sort((a, b) => a.position - b.position)
+      fragments: fragments.sort((a, b) => a.position - b.position),
+      share_count: snippet.share_count || 0
     };
   }
 
@@ -136,13 +186,24 @@ class SnippetRepository {
     }
   }
 
-  create({ title, description, categories = [], fragments = [], userId }) {
+  findAllPublic() {
+    this.#initializeStatements();
+    try {
+      const snippets = this.selectPublicStmt.all();
+      return snippets.map(this.#processSnippet.bind(this));
+    } catch (error) {
+      Logger.error('Error in findAllPublic:', error);
+      throw error;
+    }
+  }
+
+  create({ title, description, categories = [], fragments = [], userId, isPublic = false }) {
     this.#initializeStatements();
     try {
       const db = getDb();
       
       return db.transaction(() => {
-        const insertResult = this.insertSnippetStmt.run(title, description, userId);
+        const insertResult = this.insertSnippetStmt.run(title, description, userId, isPublic);
         const snippetId = insertResult.lastInsertRowid;
         
         fragments.forEach((fragment, index) => {
@@ -172,13 +233,13 @@ class SnippetRepository {
     }
   }
 
-  update(id, { title, description, categories = [], fragments = [] }, userId) {
+  update(id, { title, description, categories = [], fragments = [], isPublic = 0 }, userId) {
     this.#initializeStatements();
     try {
       const db = getDb();
       
       return db.transaction(() => {
-        this.updateSnippetStmt.run(title, description, id, userId);
+        this.updateSnippetStmt.run(title, description, isPublic, id, userId);
         
         this.deleteFragmentsStmt.run(id, userId);
         fragments.forEach((fragment, index) => {
@@ -226,10 +287,15 @@ class SnippetRepository {
     }
   }
 
-  findById(id, userId) {
+  findById(id, userId = null) {
     this.#initializeStatements();
     try {
-      const snippet = this.selectByIdStmt.get(id, userId);
+      if (userId) {
+        const snippet = this.selectByIdStmt.get(id, userId);
+        return this.#processSnippet(snippet);
+      }
+      
+      const snippet = this.selectPublicByIdStmt.get(id);
       return this.#processSnippet(snippet);
     } catch (error) {
       Logger.error('Error in findById:', error);

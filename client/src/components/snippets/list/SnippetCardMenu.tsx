@@ -8,13 +8,15 @@ interface SnippetCardMenuProps {
   onDelete: () => void;
   onShare: () => void;
   onOpenInNewTab: () => void;
+  isPublicView: boolean;
 }
 
 const SnippetCardMenu: React.FC<SnippetCardMenuProps> = ({
   onEdit,
   onDelete,
   onShare,
-  onOpenInNewTab
+  onOpenInNewTab,
+  isPublicView
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -22,9 +24,25 @@ const SnippetCardMenu: React.FC<SnippetCardMenuProps> = ({
 
   useOutsideClick(dropdownRef, () => setIsDropdownOpen(false), [buttonRef]);
 
+  if (isPublicView) {
+    return (
+      <div className="top-4 right-4 flex items-center gap-1">
+        <IconButton
+          icon={<ExternalLink size={16} />}
+          onClick={(e: React.MouseEvent) => {
+            e.stopPropagation();
+            onOpenInNewTab();
+          }}
+          variant="custom"
+          size="sm"
+          className="bg-gray-700 hover:bg-gray-600"
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="top-4 right-4 flex items-center gap-1">
-      {/* Primary Actions - Always Visible */}
       <IconButton
         icon={<Pencil size={16} />}
         onClick={(e: React.MouseEvent) => {
@@ -75,7 +93,7 @@ const SnippetCardMenu: React.FC<SnippetCardMenuProps> = ({
               }}
               className="w-full px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 flex items-center gap-2"
             >
-              <ExternalLink size={16} className="text-gray-400" />
+              <ExternalLink size={16} />
               Open in new tab
             </button>
             <button

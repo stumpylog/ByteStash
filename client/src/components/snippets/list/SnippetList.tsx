@@ -16,6 +16,7 @@ export interface SnippetListProps {
   showCategories: boolean;
   expandCategories: boolean;
   showLineNumbers: boolean;
+  isPublicView: boolean;
 }
 
 const SnippetList: React.FC<SnippetListProps> = ({ 
@@ -31,7 +32,8 @@ const SnippetList: React.FC<SnippetListProps> = ({
   previewLines,
   showCategories,
   expandCategories,
-  showLineNumbers
+  showLineNumbers,
+  isPublicView
 }) => {
   if (snippets.length === 0) {
     return (
@@ -62,6 +64,7 @@ const SnippetList: React.FC<SnippetListProps> = ({
           showCategories={showCategories}
           expandCategories={expandCategories}
           showLineNumbers={showLineNumbers}
+          isPublicView={isPublicView}
         />
       ))}
     </div>
