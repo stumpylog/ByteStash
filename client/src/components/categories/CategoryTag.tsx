@@ -28,7 +28,7 @@ const CategoryTag: React.FC<CategoryTagProps> = ({
           transition-colors group ${className}`}
         type="button"
       >
-        <span>{category}</span>
+        <span className='text-gray-300'>{category}</span>
         <span className="text-gray-400 group-hover:text-white">×</span>
       </button>
     );
