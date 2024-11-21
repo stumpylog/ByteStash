@@ -32,7 +32,7 @@ class SnippetService {
       const result = await snippetRepository.create({ 
         ...snippetData, 
         userId,
-        isPublic: snippetData.is_public || false 
+        isPublic: snippetData.is_public || 0 
       });
       Logger.debug('Service: Created snippet with ID:', result.id);
       return result;
