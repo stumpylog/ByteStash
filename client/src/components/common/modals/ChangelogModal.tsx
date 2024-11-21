@@ -87,10 +87,8 @@ const ChangelogModal: React.FC<ChangelogModalProps> = ({ isOpen, onClose }) => {
                     {formatDate(release.published_at)}
                   </span>
                 </div>
-                <div className="markdown">
-                  <ReactMarkdown
-                    className="text-sm text-gray-300 markdown"
-                  >
+                <div className="markdown-content bg-gray-800 rounded-lg">
+                  <ReactMarkdown className="markdown prose prose-invert max-w-none">
                     {release.body}
                   </ReactMarkdown>
                 </div>
