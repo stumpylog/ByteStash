@@ -81,7 +81,12 @@ function createInitialSchema(db) {
     CREATE TABLE IF NOT EXISTS users (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       username TEXT UNIQUE NOT NULL,
+      username_normalized TEXT,
       password_hash TEXT NOT NULL,
+      oidc_id TEXT,
+      oidc_provider TEXT,
+      email TEXT,
+      name TEXT,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     );
 
@@ -126,6 +131,8 @@ function createInitialSchema(db) {
     CREATE INDEX IF NOT EXISTS idx_fragments_snippet_id ON fragments(snippet_id);
     CREATE INDEX IF NOT EXISTS idx_shared_snippets_snippet_id ON shared_snippets(snippet_id);
     CREATE INDEX idx_snippets_is_public ON snippets(is_public);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_normalized ON users(username_normalized COLLATE NOCASE);
+    CREATE UNIQUE INDEX IF NOT EXISTS idx_users_oidc ON users(oidc_id, oidc_provider) WHERE oidc_id IS NOT NULL AND oidc_provider IS NOT NULL;
   `);
 }
 
