@@ -21,45 +21,27 @@ ByteStash can also be hosted manually via the docker-compose file:
 ```
 services:
   bytestash:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: "ghcr.io/jordan-dalby/bytestash:latest"
+    restart: always
+    volumes:
+      - /your/snippet/path:/data/snippets
     ports:
       - "5000:5000"
     environment:
-      # e.g. write /bytestash for a domain such as my.domain/bytestash, leave blank in every other case
-      - BASE_PATH=
-      # Either provide JWT_SECRET directly or use JWT_SECRET_FILE for Docker secrets
-      #- JWT_SECRET_FILE=/run/secrets/jwt
-      - JWT_SECRET=your-secret
-      # how long the token lasts, examples: "2 days", "10h", "7d", "1m", "60s"
-      - TOKEN_EXPIRY=24h
-      # is this bytestash instance open to new accounts being created?
-      - ALLOW_NEW_ACCOUNTS=true
-      # Should debug mode be enabled? Essentially enables logging, in most cases leave this as false
-      - DEBUG=false
+      # See https://github.com/jordan-dalby/ByteStash/wiki/FAQ#environment-variables
+      BASE_PATH: ""
+      JWT_SECRET: your-secret
+      TOKEN_EXPIRY: 24h
+      ALLOW_NEW_ACCOUNTS: "true"
+      DEBUG: "true"
 
-      # Optional: Enable OIDC for Single Sign On
-      - OIDC_ENABLED=true
-      # Optional: Display name for users signing in with SSO, will default to Single Sign-on
-      - OIDC_DISPLAY_NAME=
-      # Your OIDC issuer url (https!), e.g. https://authentik.mydomain.com/application/o/bytestash/ for authentik
-      - OIDC_ISSUER_URL=
-      # Your OIDC client ID, you can find it in your app provider
-      - OIDC_CLIENT_ID=
-      # Your OIDC client secret, again, found in the app provider
-      - OIDC_CLIENT_SECRET=
-      # The OIDC scopes to request, e.g. "openid profile email groups"
-      - OIDC_SCOPES=
-    volumes:
-      - ./data:/data/snippets
-# Uncomment to use docker secrets
-#    secrets:
-#      - jwt
-
-#secrets:
-#  jwt:
-#    file: ./secrets/jwt.txt
+      # See https://github.com/jordan-dalby/ByteStash/wiki/Single-Sign%E2%80%90on-Setup for more info
+      OIDC_ENABLED: "false"
+      OIDC_DISPLAY_NAME: ""
+      OIDC_ISSUER_URL: ""
+      OIDC_CLIENT_ID: ""
+      OIDC_CLIENT_SECRET: ""
+      OIDC_SCOPES: ""
 ```
 
 ## Tech Stack
