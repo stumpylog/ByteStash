@@ -8,6 +8,7 @@ import { AlertCircle } from 'lucide-react';
 import { ROUTES } from '../../constants/routes';
 import { OIDCConfig } from '../../types/auth';
 import { apiClient } from '../../utils/api/apiClient';
+import { handleOIDCError } from '../../utils/oidcErrorHandler';
 
 export const RegisterPage: React.FC = () => {
   const [username, setUsername] = useState('');
@@ -30,6 +31,16 @@ export const RegisterPage: React.FC = () => {
     
     fetchOIDCConfig();
   }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const error = params.get('error');
+    const message = params.get('message');
+    
+    if (error) {
+      handleOIDCError(error, addToast, oidcConfig?.displayName, message || undefined);
+    }
+  }, [addToast, oidcConfig]);
 
   if (isAuthenticated) {
     return <Navigate to="/" replace />;
