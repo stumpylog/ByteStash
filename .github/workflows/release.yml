@@ -35,7 +35,7 @@ jobs:
         with:
           images: |
             ghcr.io/${{ steps.set-ghcr-repository.outputs.ghcr-repository }}
-            name=${{ github.repository }},enable=false
+            name=docker.io/${{ github.repository }},enable=false
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
