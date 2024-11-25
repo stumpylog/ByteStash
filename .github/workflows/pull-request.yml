@@ -48,7 +48,7 @@ jobs:
         uses: docker/build-push-action@v5
         with:
           context: .
-          push: ${{ github.repository == 'jordan-dalby/ByteStash' }}
+          push: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
           platforms: linux/amd64
           tags: ${{ steps.docker-metadata.outputs.tags }}
           labels: ${{ steps.docker-metadata.outputs.labels }}
